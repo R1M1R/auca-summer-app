@@ -184,11 +184,6 @@ const CARDS: CultureCard[] = [
 ]
 
 /* ── Animation variants ──────────────────────────────────────── */
-const pageVariants = {
-  initial: { opacity: 0, x: 30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, x: -30, transition: { duration: 0.25 } },
-}
 const gridStagger = {
   animate: { transition: { staggerChildren: 0.06 } },
 }
@@ -289,19 +284,8 @@ export default function CultureTips() {
   const navigate    = useNavigate()
 
   return (
-    <motion.div
-      className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      {/* ── Header ── */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between"
-      >
+    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.88 }}
@@ -319,7 +303,7 @@ export default function CultureTips() {
           </div>
         </div>
         <ThemeToggle />
-      </motion.header>
+      </header>
 
       {/* ── Hero ── */}
       <motion.div
@@ -361,6 +345,6 @@ export default function CultureTips() {
       </motion.main>
 
       <BottomNav />
-    </motion.div>
+    </div>
   )
 }

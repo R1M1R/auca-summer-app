@@ -1,19 +1,21 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import {
-  collection, query, orderBy, limit,
-  doc, getDoc, setDoc,
-  onSnapshot, serverTimestamp, Timestamp,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore'
 import { db, isConfigured } from '@/lib/firebase'
+import { useDiaryStore } from '@/store/useDiaryStore'
 import { buildDiaryRussianFields } from '@/lib/dualSave'
 import {
-  DEMO_DIARY_KEY,
-  notifyDemoUpdate,
-  subscribeDemoStorage,
-} from '@/lib/demoStorage'
-import type { DiaryEntry, FirestoreDiaryEntry, MoodLevel } from '@/types'
-
-const COLL = 'diary_entries'
+  loadDemoDiary,
+  notifyDemoDiaryUpdate,
+  DIARY_COLLECTION,
+} from '@/lib/diaryData'
+import { DEMO_DIARY_KEY } from '@/lib/demoStorage'
+import type { DiaryEntry, MoodLevel } from '@/types'
 
 export function toDateKey(d: Date): string {
   const y  = d.getFullYear()
@@ -26,75 +28,10 @@ function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
 }
 
-function parseEntry(id: string, raw: FirestoreDiaryEntry): DiaryEntry {
-  return {
-    id,
-    date:      raw.date?.toDate      ? raw.date.toDate()      : new Date(),
-    text:      raw.text,
-    textRu:    raw.text_ru,
-    mood:      raw.mood,
-    createdAt: raw.createdAt?.toDate ? raw.createdAt.toDate() : null,
-    updatedAt: raw.updatedAt?.toDate ? raw.updatedAt.toDate() : null,
-  }
-}
-
-function loadDemoDiary(): DiaryEntry[] {
-  try {
-    const raw = localStorage.getItem(DEMO_DIARY_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as DiaryEntry[]
-    return parsed.map((e) => ({
-      ...e,
-      date:      new Date(e.date),
-      createdAt: e.createdAt ? new Date(e.createdAt) : null,
-      updatedAt: e.updatedAt ? new Date(e.updatedAt) : null,
-    }))
-  } catch {
-    return []
-  }
-}
-
 export function useDiaryEntries() {
-  const [entries,  setEntries]  = useState<DiaryEntry[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!isConfigured) {
-      const refresh = () => setEntries(loadDemoDiary())
-      refresh()
-      setLoading(false)
-      setError(null)
-      return subscribeDemoStorage(DEMO_DIARY_KEY, refresh)
-    }
-
-    const q = query(
-      collection(db, COLL),
-      orderBy('date', 'desc'),
-      limit(60),
-    )
-
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        setEntries(
-          snap.docs.map((d) =>
-            parseEntry(d.id, d.data() as FirestoreDiaryEntry),
-          ),
-        )
-        setLoading(false)
-        setError(null)
-      },
-      (err) => {
-        console.error('[useDiaryEntries]', err)
-        setError(err.message)
-        setLoading(false)
-      },
-    )
-
-    return unsub
-  }, [])
-
+  const entries = useDiaryStore((s) => s.entries)
+  const loading = useDiaryStore((s) => s.loading)
+  const error   = useDiaryStore((s) => s.error)
   return { entries, loading, error }
 }
 
@@ -133,11 +70,11 @@ export function useDiaryMutations() {
           if (idx >= 0) stored[idx] = entry
           else stored.unshift(entry)
           localStorage.setItem(DEMO_DIARY_KEY, JSON.stringify(stored))
-          notifyDemoUpdate(DEMO_DIARY_KEY)
+          notifyDemoDiaryUpdate()
           return
         }
 
-        const ref = doc(db, COLL, key)
+        const ref = doc(db, DIARY_COLLECTION, key)
         const snap = await getDoc(ref)
 
         await setDoc(ref, {
@@ -159,11 +96,11 @@ export function useDiaryMutations() {
     if (!isConfigured) {
       const stored = loadDemoDiary().filter((e) => e.id !== id)
       localStorage.setItem(DEMO_DIARY_KEY, JSON.stringify(stored))
-      notifyDemoUpdate(DEMO_DIARY_KEY)
+      notifyDemoDiaryUpdate()
       return
     }
     const { deleteDoc } = await import('firebase/firestore')
-    await deleteDoc(doc(db, COLL, id))
+    await deleteDoc(doc(db, DIARY_COLLECTION, id))
   }, [])
 
   return { saveEntry, deleteEntry, saving, error }

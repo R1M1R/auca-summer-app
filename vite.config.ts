@@ -14,8 +14,6 @@ export default defineConfig({
       includeAssets: [
         'icon.svg',
         'favicon.svg',
-        '404.html',
-        '.nojekyll',
       ],
       manifest: {
         name: 'TimeFlow — AUCA Summer',

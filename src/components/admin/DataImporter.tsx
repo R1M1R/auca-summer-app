@@ -9,7 +9,7 @@ import {
   Database, Play, CheckCircle2, AlertTriangle,
   Trash2, RefreshCw, ChevronDown, Info,
 } from 'lucide-react'
-import { db, isConfigured } from '@/lib/firebase'
+import { db, isConfigured, getFirebaseSetupIssues } from '@/lib/firebase'
 import { useApp } from '@/contexts/AppContext'
 import { scheduleData } from '@/data/scheduleData'
 import {
@@ -140,14 +140,29 @@ export default function DataImporter() {
   if (role !== 'family') return null
 
   if (!isConfigured) {
+    const issues = getFirebaseSetupIssues()
     return (
       <div className="glass-card p-5 border-amber-200 dark:border-amber-800/40 space-y-3">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Firebase not configured</p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Fill in <code className="text-primary-500">.env.local</code> to enable database import.
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Firebase не настроен
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Скопируйте <code className="text-primary-500">.env.example</code> →{' '}
+              <code className="text-primary-500">.env.local</code> и вставьте ключи из Firebase Console.
+              Затем перезапустите <code className="text-primary-500">npm run dev</code>.
+            </p>
+            {issues.length > 0 && (
+              <ul className="text-xs text-amber-700 dark:text-amber-300/90 list-disc pl-4 space-y-0.5">
+                {issues.map((msg) => (
+                  <li key={msg}>{msg}</li>
+                ))}
+              </ul>
+            )}
+            <p className="text-[11px] text-slate-400">
+              Проверка: <code className="text-primary-500">npm run check:firebase</code>
             </p>
           </div>
         </div>
@@ -221,7 +236,12 @@ export default function DataImporter() {
       setPhase('done')
     } catch (err) {
       console.error('[DataImporter]', err)
-      setErrorMsg(err instanceof Error ? err.message : 'Unknown error')
+      const raw = err instanceof Error ? err.message : 'Unknown error'
+      const friendly =
+        raw.includes('PERMISSION_DENIED') || raw.includes('permission-denied')
+          ? 'Нет доступа к Firestore: проверьте .env.local (реальный project ID), включите Firestore API в Google Cloud и задеплойте firestore.rules.'
+          : raw
+      setErrorMsg(friendly)
       setPhase('error')
     }
   }

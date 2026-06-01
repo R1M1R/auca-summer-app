@@ -14,16 +14,10 @@ import BottomNav   from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 
 /* ── Variants ───────────────────────────────────────────────── */
-const pageVariants = {
-  initial: { opacity: 0, x: 30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, x: -30, transition: { duration: 0.25 } },
-}
-const stagger = { animate: { transition: { staggerChildren: 0.06 } } }
-const fadeUp  = {
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-}
+import { fadeUpLight } from '@/lib/motion'
+
+const stagger = { animate: { transition: { staggerChildren: 0.05 } } }
+const fadeUp  = fadeUpLight
 
 /* ── Section wrapper ─────────────────────────────────────────── */
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -146,19 +140,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <motion.div
-      className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between"
-      >
+    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-sm">
             <Settings className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -166,7 +149,7 @@ export default function SettingsPage() {
           <p className="text-[15px] font-bold text-slate-700 dark:text-slate-200">Settings</p>
         </div>
         <ThemeToggle />
-      </motion.header>
+      </header>
 
       <motion.main
         variants={stagger}
@@ -261,6 +244,6 @@ export default function SettingsPage() {
       </motion.main>
 
       <BottomNav />
-    </motion.div>
+    </div>
   )
 }

@@ -26,6 +26,8 @@ import ProgramProgressBar from '@/components/ProgramProgressBar'
 import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { fadeUpLight } from '@/lib/motion'
+
 const BEFORE_MEETING = Date.now() < MEETING_DATE.getTime()
 
 /* ── Category pill colours ──────────────────────────────────── */
@@ -42,11 +44,8 @@ const CATEGORY_COLORS: Record<EventCategory, string> = {
 }
 
 /* ── Animation variants ─────────────────────────────────────── */
-const container = { animate: { transition: { staggerChildren: 0.07 } } }
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
-}
+const container = { animate: { transition: { staggerChildren: 0.05 } } }
+const fadeUp = fadeUpLight
 const scaleIn = {
   initial: { opacity: 0, scale: 0.93 },
   animate: { opacity: 1, scale: 1,    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
@@ -140,11 +139,7 @@ export default function Dashboard() {
     <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
 
       {/* ── Sticky header ── */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.45 } }}
-        className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between"
-      >
+      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center shadow-glow-sm">
             <Clock className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -176,7 +171,7 @@ export default function Dashboard() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </motion.header>
+      </header>
 
       {/* ── Main content ── */}
       <motion.main

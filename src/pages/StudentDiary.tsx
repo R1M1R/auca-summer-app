@@ -16,11 +16,6 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 type Tab = 'preferences' | 'impressions'
 
 /* ── Page animation ──────────────────────────────────────────── */
-const pageVariants = {
-  initial: { opacity: 0, x: 30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, x: -30, transition: { duration: 0.25 } },
-}
 
 /* ── Tab config ──────────────────────────────────────────────── */
 const TABS = [
@@ -58,19 +53,8 @@ export default function StudentDiary() {
   }
 
   return (
-    <motion.div
-      className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      {/* ── Sticky header ── */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between"
-      >
+    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-primary-600 flex items-center justify-center shadow-sm">
             <BookHeart className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -99,7 +83,7 @@ export default function StudentDiary() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </motion.header>
+      </header>
 
       {/* ── Tab bar (sticky below header) ── */}
       <div className="sticky top-[61px] z-20 mx-4 mt-3">
@@ -135,10 +119,10 @@ export default function StudentDiary() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={tab}
-            initial={{ opacity: 0, x: tabDir * 28 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: tabDir * -20 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: tabDir * 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: tabDir * -6 }}
+            transition={{ duration: 0.18 }}
           >
             {tab === 'preferences' && <PreferencesTab role={role} />}
             {tab === 'impressions' && <ImpressionsTab  role={role} />}
@@ -147,6 +131,6 @@ export default function StudentDiary() {
       </div>
 
       <BottomNav />
-    </motion.div>
+    </div>
   )
 }

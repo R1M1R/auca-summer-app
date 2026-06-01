@@ -1,8 +1,10 @@
 import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useApp }          from '@/contexts/AppContext'
 import { useRoleLanguage } from '@/hooks/useRoleLanguage'
+import FirestoreSync from '@/components/FirestoreSync'
+import { routeTransition } from '@/lib/motion'
 import SOSModal            from '@/components/widgets/SOSModal'
 import SOSButton           from '@/components/widgets/SOSButton'
 import UsefulToolsPanel    from '@/components/widgets/UsefulToolsPanel'
@@ -56,9 +58,18 @@ export default function App() {
 
   return (
     <>
+      <FirestoreSync />
       <Suspense fallback={<Loader />}>
         <AnimatePresence mode="wait" initial={false}>
-          <Routes location={location} key={location.pathname}>
+          <motion.div
+            key={location.pathname}
+            className="min-h-screen"
+            variants={routeTransition}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+          <Routes location={location}>
             <Route path="/"         element={<RootRoute />} />
 
             <Route path="/dashboard"
@@ -86,6 +97,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </motion.div>
         </AnimatePresence>
       </Suspense>
 

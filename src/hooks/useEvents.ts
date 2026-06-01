@@ -1,146 +1,40 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
+  collection,
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore'
 import { db, isConfigured } from '@/lib/firebase'
 import { useAppStore } from '@/store/useAppStore'
+import { useEventsStore } from '@/store/useEventsStore'
 import {
   canStudentEditEvent,
   canFamilyManageEvents,
 } from '@/lib/eventPermissions'
 import { buildEventRussianFields } from '@/lib/dualSave'
-import type {
-  AppEvent,
-  FirestoreEvent,
-  NewEventPayload,
-  UpdateEventPayload,
-} from '@/types'
+import {
+  loadDemoEvents,
+  saveDemoEvents,
+  notifyDemoEventsUpdate,
+  EVENTS_COLLECTION,
+} from '@/lib/eventsData'
+import type { AppEvent, NewEventPayload, UpdateEventPayload } from '@/types'
 import { ADMIN_CREATOR } from '@/types'
-import { notifyDemoUpdate, subscribeDemoStorage } from '@/lib/demoStorage'
-import { buildEventsFromSchedule } from '@/lib/buildScheduleEvents'
 
-const EVENTS_COLLECTION = 'events'
-const DEMO_STORAGE_KEY  = 'app_demo_events_v3'
-
-/* ── Firestore doc → AppEvent ───────────────────────────────── */
-function fromFirestore(id: string, raw: FirestoreEvent): AppEvent {
-  const legacyHost = raw.createdBy === 'host'
-  return {
-    id,
-    title:           raw.title,
-    titleRu:         raw.title_ru,
-    description:     raw.description ?? '',
-    descriptionRu:   raw.description_ru,
-    date:            raw.date.toDate(),
-    duration:        raw.duration,
-    location:        raw.location,
-    locationRu:      raw.location_ru,
-    timeRu:          raw.time_ru,
-    timeEn:          raw.time_en,
-    hasExactTime:    raw.hasExactTime ?? true,
-    category:    raw.category,
-    createdBy:   legacyHost ? ADMIN_CREATOR : raw.createdBy,
-    isEditable:  raw.isEditable ?? (!legacyHost && raw.createdBy !== ADMIN_CREATOR),
-    completed:   raw.completed ?? false,
-    createdAt:   raw.createdAt?.toDate?.() ?? new Date(),
-    updatedAt:   raw.updatedAt?.toDate?.() ?? new Date(),
-  }
-}
-
-function normalizeAppEvent(e: AppEvent): AppEvent {
-  const legacyHost = e.createdBy === 'host'
-  return {
-    ...e,
-    createdBy:  legacyHost ? ADMIN_CREATOR : e.createdBy,
-    isEditable: e.isEditable ?? (e.category === 'student_personal' && !legacyHost),
-  }
-}
-
-/* ── Demo mode persistence ──────────────────────────────────── */
-function loadDemoEvents(): AppEvent[] {
-  try {
-    const raw = localStorage.getItem(DEMO_STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as AppEvent[]
-      return parsed.map((e) => ({
-        ...e,
-        date:        new Date(e.date),
-        createdAt:   new Date(e.createdAt),
-        updatedAt:   new Date(e.updatedAt),
-      })).map(normalizeAppEvent)
-    }
-  } catch {
-    /* ignore */
-  }
-  return buildEventsFromSchedule().map(normalizeAppEvent)
-}
-
-function saveDemoEvents(events: AppEvent[]) {
-  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(events))
-}
-
-function notifyDemoListeners() {
-  notifyDemoUpdate(DEMO_STORAGE_KEY)
-}
-
-function subscribeDemo(cb: () => void) {
-  return subscribeDemoStorage(DEMO_STORAGE_KEY, cb)
-}
-
-/* ── useEvents ──────────────────────────────────────────────── */
 export function useEvents() {
-  const [events,  setEvents]  = useState<AppEvent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!isConfigured) {
-      const refresh = () => setEvents(loadDemoEvents())
-      refresh()
-      setLoading(false)
-      return subscribeDemo(refresh)
-    }
-
-    const q = query(
-      collection(db, EVENTS_COLLECTION),
-      orderBy('date', 'asc'),
-    )
-
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        setEvents(
-          snap.docs.map((d) => fromFirestore(d.id, d.data() as FirestoreEvent)),
-        )
-        setLoading(false)
-        setError(null)
-      },
-      (err) => {
-        console.error('[useEvents]', err)
-        setError(err.message)
-        setLoading(false)
-      },
-    )
-
-    return unsub
-  }, [])
-
+  const events  = useEventsStore((s) => s.events)
+  const loading = useEventsStore((s) => s.loading)
+  const error   = useEventsStore((s) => s.error)
   return { events, loading, error }
 }
 
-/* ── useEventMutations ──────────────────────────────────────── */
 export function useEventMutations() {
-  const role       = useAppStore((s) => s.role)
-  const userId     = useAppStore((s) => s.userId)
+  const role         = useAppStore((s) => s.role)
+  const userId       = useAppStore((s) => s.userId)
   const ensureUserId = useAppStore((s) => s.ensureUserId)
 
   const canFamilyMutate   = canFamilyManageEvents(role)
@@ -202,20 +96,20 @@ export function useEventMutations() {
           const list = loadDemoEvents()
           const now  = new Date()
           list.push({
-            id:              `demo-${Date.now()}`,
+            id:            `demo-${Date.now()}`,
             ...payload,
-            titleRu:         ruFields.title_ru,
-            descriptionRu:   ruFields.description_ru,
-            locationRu:      ruFields.location_ru,
-            category:        'student_personal',
-            createdBy:       uid,
-            isEditable:      true,
-            completed:       false,
-            createdAt:       now,
-            updatedAt:       now,
+            titleRu:       ruFields.title_ru,
+            descriptionRu: ruFields.description_ru,
+            locationRu:    ruFields.location_ru,
+            category:      'student_personal',
+            createdBy:     uid,
+            isEditable:    true,
+            completed:     false,
+            createdAt:     now,
+            updatedAt:     now,
           })
           saveDemoEvents(list)
-          notifyDemoListeners()
+          notifyDemoEventsUpdate()
           return
         }
 
@@ -241,7 +135,7 @@ export function useEventMutations() {
           updatedAt:   now,
         })
         saveDemoEvents(list)
-        notifyDemoListeners()
+        notifyDemoEventsUpdate()
         return
       }
 
@@ -289,7 +183,7 @@ export function useEventMutations() {
         }
         list[idx] = merged
         saveDemoEvents(list)
-        notifyDemoListeners()
+        notifyDemoEventsUpdate()
         return
       }
 
@@ -324,7 +218,7 @@ export function useEventMutations() {
         if (!ev) return
         if (!canFamilyMutate) assertCanDelete(ev)
         saveDemoEvents(list.filter((e) => e.id !== id))
-        notifyDemoListeners()
+        notifyDemoEventsUpdate()
         return
       }
 
@@ -341,7 +235,7 @@ export function useEventMutations() {
         if (idx === -1) return
         list[idx] = { ...list[idx], completed, updatedAt: new Date() }
         saveDemoEvents(list)
-        notifyDemoListeners()
+        notifyDemoEventsUpdate()
         return
       }
 

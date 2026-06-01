@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Calendar, Plus, Wifi, WifiOff, Bell, X, Sparkles } from 'lucide-react'
@@ -16,12 +16,6 @@ import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import type { AppEvent } from '@/types'
-
-const pageVariants = {
-  initial: { opacity: 0, x: 30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, x: -30, transition: { duration: 0.25 } },
-}
 
 function SkeletonTimeline() {
   return (
@@ -87,24 +81,37 @@ export default function ScheduleDashboard() {
   const modalMode = isStudent ? 'student' : 'family'
   const effectiveUserId = userId || (isStudent ? ensureUserId() : '')
 
-  const dayEvents = rawEvents
-    .filter((e) => sameDay(e.date, selectedDate))
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
+  const dayEvents = useMemo(
+    () =>
+      rawEvents
+        .filter((e) => sameDay(e.date, selectedDate))
+        .sort((a, b) => a.date.getTime() - b.date.getTime()),
+    [rawEvents, selectedDate],
+  )
 
   const now = new Date()
 
   const openAdd  = () => { setEditingEvent(null); setShowModal(true) }
-  const openEdit = (ev: AppEvent) => {
-    const raw = rawEvents.find((r) => r.id === ev.id) ?? ev
-    setEditingEvent(raw)
-    setShowModal(true)
-  }
   const closeModal = () => { setShowModal(false); setEditingEvent(null) }
 
-  const handleDelete = async (ev: AppEvent) => {
-    const raw = rawEvents.find((r) => r.id === ev.id) ?? ev
-    await deleteEvent(raw.id, raw)
-  }
+  const handleEditById = useCallback(
+    (id: string) => {
+      const raw = rawEvents.find((r) => r.id === id)
+      if (!raw) return
+      setEditingEvent(raw)
+      setShowModal(true)
+    },
+    [rawEvents],
+  )
+
+  const handleDeleteById = useCallback(
+    async (id: string) => {
+      const raw = rawEvents.find((r) => r.id === id)
+      if (!raw) return
+      await deleteEvent(raw.id, raw)
+    },
+    [rawEvents, deleteEvent],
+  )
 
   const dateLabel = selectedDate.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
@@ -112,18 +119,8 @@ export default function ScheduleDashboard() {
   const isToday = sameDay(selectedDate, now)
 
   return (
-    <motion.div
-      className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.4 } }}
-        className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between"
-      >
+    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
             <Calendar className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -157,7 +154,7 @@ export default function ScheduleDashboard() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </motion.header>
+      </header>
 
       {/* Host: new student plan notification */}
       <AnimatePresence>
@@ -220,19 +217,16 @@ export default function ScheduleDashboard() {
               style={{ left: 'calc(1rem + 52px)' }}
             />
 
-            <AnimatePresence mode="popLayout">
-              {dayEvents.map((event, i) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  role={role}
-                  userId={effectiveUserId}
-                  index={i}
-                  onEdit={() => openEdit(event)}
-                  onDelete={() => handleDelete(event)}
-                />
-              ))}
-            </AnimatePresence>
+            {dayEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                role={role}
+                userId={effectiveUserId}
+                onEditById={handleEditById}
+                onDeleteById={handleDeleteById}
+              />
+            ))}
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -251,14 +245,12 @@ export default function ScheduleDashboard() {
         {canAdd && (
           <motion.button
             key="fab"
-            initial={{ scale: 0, opacity: 0, rotate: -45 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            exit={{ scale: 0, opacity: 0, rotate: 45 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.2 }}
             onClick={openAdd}
-            className={`fixed bottom-[88px] right-5 z-40 w-14 h-14 rounded-2xl shadow-glow flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            className={`fixed bottom-[88px] right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
               isStudent
                 ? 'bg-gradient-to-br from-fuchsia-500 to-violet-600 focus-visible:ring-fuchsia-400'
                 : 'bg-gradient-to-br from-primary-500 to-violet-600 focus-visible:ring-primary-400'
@@ -281,6 +273,6 @@ export default function ScheduleDashboard() {
       />
 
       <BottomNav />
-    </motion.div>
+    </div>
   )
 }

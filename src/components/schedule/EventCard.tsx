@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
@@ -87,15 +87,31 @@ const CAT: Record<EventCategory, CatConfig> = {
 }
 
 interface Props {
-  event:    AppEvent
-  role:     UserRole
-  userId:   string
-  index:    number
-  onEdit:   () => void
-  onDelete: () => void
+  event:        AppEvent
+  role:         UserRole
+  userId:       string
+  onEditById:   (id: string) => void
+  onDeleteById: (id: string) => void
 }
 
-export default function EventCard({ event, role, userId, index, onEdit, onDelete }: Props) {
+function eventCardPropsEqual(prev: Props, next: Props): boolean {
+  const a = prev.event
+  const b = next.event
+  return (
+    a.id === b.id &&
+    a.updatedAt.getTime() === b.updatedAt.getTime() &&
+    a.completed === b.completed &&
+    a.title === b.title &&
+    a.titleRu === b.titleRu &&
+    a.date.getTime() === b.date.getTime() &&
+    prev.role === next.role &&
+    prev.userId === next.userId &&
+    prev.onEditById === next.onEditById &&
+    prev.onDeleteById === next.onDeleteById
+  )
+}
+
+function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
   const { t } = useTranslation()
   const lang  = useAppLanguage()
   const display = useDisplayEvent(event)
@@ -137,16 +153,13 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
   const { canEdit, canDelete } = showEditDeleteOnCard(event, role, userId)
 
   const cardRing = isStudentPlan && isFamily
-    ? 'ring-2 ring-fuchsia-400/60 dark:ring-fuchsia-500/40 shadow-fuchsia-100/50 dark:shadow-fuchsia-900/20'
+    ? 'ring-2 ring-fuchsia-400/60 dark:ring-fuchsia-500/40'
     : ''
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -24 }}
-      animate={{ opacity: isPast ? 0.45 : 1, x: 0 }}
-      transition={{ delay: index * 0.065, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      layout
+    <div
       className="flex gap-3"
+      style={{ opacity: isPast ? 0.45 : 1 }}
     >
       <div className="flex flex-col items-center gap-0 w-[52px] shrink-0">
         <span className={`text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-3.5 leading-tight text-center ${
@@ -155,12 +168,11 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
           {startStr}
         </span>
         <div className="flex-1 flex flex-col items-center mt-1">
-          <div className={`w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#0f0f1a] shadow ${cfg.dot} z-10`} />
+          <div className={`w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#0f0f1a] ${cfg.dot} z-10`} />
         </div>
       </div>
 
-      <motion.div
-        layout
+      <div
         className={`flex-1 min-w-0 border rounded-2xl mb-3 overflow-hidden ${cfg.lightBg} ${cfg.border} ${cardRing}`}
       >
         <div
@@ -170,7 +182,7 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
           onKeyDown={(e) => isStudent && e.key === 'Enter' && setExpanded((v) => !v)}
           className={`flex gap-3 p-3.5 ${isStudent ? 'cursor-pointer' : ''}`}
         >
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white shadow-sm shrink-0 mt-0.5`}>
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white shrink-0 mt-0.5`}>
             <Icon className="w-5 h-5" strokeWidth={1.8} />
           </div>
 
@@ -181,36 +193,35 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
               </p>
 
               {isStudent && (
-                <motion.span
-                  animate={{ rotate: expanded ? 180 : 0 }}
-                  transition={{ duration: 0.22 }}
-                  className="shrink-0 mt-0.5"
+                <span
+                  className="shrink-0 mt-0.5 transition-transform duration-200"
+                  style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                 >
                   <ChevronDown className={`w-4 h-4 ${cfg.textColor}`} />
-                </motion.span>
+                </span>
               )}
 
               {(canEdit || canDelete) && !confirmDelete && (
                 <div className="flex gap-0.5 shrink-0">
                   {canEdit && (
-                    <motion.button
-                      whileTap={{ scale: 0.82 }}
-                      onClick={(e) => { e.stopPropagation(); onEdit() }}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onEditById(event.id) }}
                       className={`p-1.5 rounded-lg ${cfg.lightBg} hover:brightness-95 ${cfg.textColor} transition-all`}
                       aria-label={t('eventCard.edit')}
                     >
                       <Pencil className="w-3.5 h-3.5" strokeWidth={2} />
-                    </motion.button>
+                    </button>
                   )}
                   {canDelete && (
-                    <motion.button
-                      whileTap={{ scale: 0.82 }}
+                    <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
                       className="p-1.5 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/30 text-slate-400 hover:text-rose-500 transition-all"
                       aria-label={t('eventCard.delete')}
                     >
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
-                    </motion.button>
+                    </button>
                   )}
                 </div>
               )}
@@ -231,7 +242,7 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
                 {categoryLabel}
               </span>
               {isStudentPlan && (
-                <span className="badge bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white border-0 text-[10px] px-2 py-0.5 shadow-sm">
+                <span className="badge bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white border-0 text-[10px] px-2 py-0.5">
                   {t('eventCard.studentsPlan')}
                 </span>
               )}
@@ -247,11 +258,10 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
         <AnimatePresence>
           {confirmDelete && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22 }}
-              style={{ overflow: 'hidden' }}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
             >
               <div className={`px-4 pb-3 border-t ${cfg.border} flex items-center gap-3 pt-3`}>
                 <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
@@ -259,20 +269,20 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
                   {t('eventCard.deleteConfirm', { title: display.title })}
                 </p>
                 <div className="flex gap-2">
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
+                  <button
+                    type="button"
                     onClick={() => setConfirmDelete(false)}
                     className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     {t('common.cancel')}
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => { setConfirmDelete(false); onDelete() }}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setConfirmDelete(false); onDeleteById(event.id) }}
                     className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white transition-colors"
                   >
                     {t('common.delete')}
-                  </motion.button>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -283,11 +293,10 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
           {expanded && isStudent && (
             <motion.div
               key="details"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              style={{ overflow: 'hidden' }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
             >
               <div className={`px-4 pt-3 pb-4 border-t ${cfg.border} space-y-3`}>
                 {display.description && (
@@ -329,22 +338,22 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
                 {(canEdit || canDelete) && (
                   <div className="flex gap-2 pt-1">
                     {canEdit && (
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={onEdit}
+                      <button
+                        type="button"
+                        onClick={() => onEditById(event.id)}
                         className="flex-1 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                       >
                         {t('eventCard.editPlan')}
-                      </motion.button>
+                      </button>
                     )}
                     {canDelete && (
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
+                      <button
+                        type="button"
                         onClick={() => setConfirmDelete(true)}
                         className="px-4 py-2 rounded-xl text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/30"
                       >
                         {t('common.delete')}
-                      </motion.button>
+                      </button>
                     )}
                   </div>
                 )}
@@ -352,7 +361,9 @@ export default function EventCard({ event, role, userId, index, onEdit, onDelete
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
+
+export default memo(EventCard, eventCardPropsEqual)

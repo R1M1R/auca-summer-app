@@ -15,6 +15,7 @@ import AccordionPanel, {
 import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { fadeUpLight } from '@/lib/motion'
 
 type PhraseItem   = { phrase: string; phonetic: string; translation: string }
 type PriceItem    = { item: string; price: string }
@@ -32,16 +33,8 @@ const EMERGENCY_STYLES: Record<string, { color: string; bg: string }> = {
   '112': { color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-800/60' },
 }
 
-const pageVariants = {
-  initial: { opacity: 0, x: 30 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, x: -30, transition: { duration: 0.25 } },
-}
-const stagger = { animate: { transition: { staggerChildren: 0.07 } } }
-const fadeUp  = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
-}
+const stagger = { animate: { transition: { staggerChildren: 0.05 } } }
+const fadeUp  = fadeUpLight
 
 export default function SurvivalGuide() {
   const { t }       = useTranslation()
@@ -62,18 +55,8 @@ export default function SurvivalGuide() {
   const emergencies   = asArray<EmergencyItem>(t('guide.sections.health.emergencies', { returnObjects: true }))
 
   return (
-    <motion.div
-      className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between"
-      >
+    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-sm">
             <Shield className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -91,7 +74,7 @@ export default function SurvivalGuide() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </motion.header>
+      </header>
 
       <motion.div variants={fadeUp} initial="initial" animate="animate" className="mx-4 mt-4">
         <div className="glass-card p-5 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-rose-500/10 border-amber-200/40 dark:border-amber-800/30">
@@ -541,6 +524,6 @@ export default function SurvivalGuide() {
       </motion.main>
 
       <BottomNav />
-    </motion.div>
+    </div>
   )
 }
