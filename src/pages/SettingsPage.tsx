@@ -1,25 +1,25 @@
+import { lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Settings, Sun, Moon, Monitor, Globe,
   UserCircle, LogOut, Database, GraduationCap, Home,
-  ChevronRight,
+  ChevronRight, Loader2,
+  type LucideIcon,
 } from 'lucide-react'
-import { useApp }      from '@/contexts/AppContext'
-import { useTheme }    from '@/contexts/ThemeContext'
+import { useApp } from '@/contexts/AppContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { useAppStore } from '@/store/useAppStore'
-import { useTheme as useThemeCtx } from '@/contexts/ThemeContext'
-import DataImporter from '@/components/admin/DataImporter'
-import BottomNav   from '@/components/BottomNav'
+import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
-
-/* ── Variants ───────────────────────────────────────────────── */
 import { fadeUpLight } from '@/lib/motion'
 
-const stagger = { animate: { transition: { staggerChildren: 0.05 } } }
-const fadeUp  = fadeUpLight
+const DataImporter = lazy(() => import('@/components/admin/DataImporter'))
 
-/* ── Section wrapper ─────────────────────────────────────────── */
+const stagger = { animate: { transition: { staggerChildren: 0.05 } } }
+const fadeUp = fadeUpLight
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <motion.div variants={fadeUp} className="space-y-2">
@@ -33,9 +33,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-/* ── Row item ───────────────────────────────────────────────── */
-function Row({ icon: Icon, label, children, gradient = 'from-slate-400 to-slate-500' }: {
-  icon: React.ElementType; label: string; gradient?: string;
+function Row({
+  icon: Icon,
+  label,
+  children,
+  gradient = 'from-slate-400 to-slate-500',
+}: {
+  icon: LucideIcon
+  label: string
+  gradient?: string
   children?: React.ReactNode
 }) {
   return (
@@ -49,14 +55,14 @@ function Row({ icon: Icon, label, children, gradient = 'from-slate-400 to-slate-
   )
 }
 
-/* ── Theme segment control ───────────────────────────────────── */
 function ThemeSegment() {
-  const { mode, setMode } = useThemeCtx()
+  const { t } = useTranslation()
+  const { mode, setMode } = useTheme()
   const OPTIONS = [
-    { value: 'light',  Icon: Sun,     label: 'Light'  },
-    { value: 'dark',   Icon: Moon,    label: 'Dark'   },
-    { value: 'system', Icon: Monitor, label: 'System' },
-  ] as const
+    { value: 'light' as const,  Icon: Sun,     label: t('settings.light') },
+    { value: 'dark' as const,   Icon: Moon,    label: t('settings.dark') },
+    { value: 'system' as const, Icon: Monitor, label: t('settings.system') },
+  ]
 
   return (
     <div className="flex gap-1 p-1 glass-card rounded-xl">
@@ -65,6 +71,7 @@ function ThemeSegment() {
         return (
           <motion.button
             key={value}
+            type="button"
             onClick={() => setMode(value)}
             whileTap={{ scale: 0.9 }}
             className={`relative flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-semibold transition-colors ${
@@ -73,7 +80,7 @@ function ThemeSegment() {
           >
             {active && (
               <motion.div
-                layoutId="theme-seg"
+                layoutId="settings-theme-seg"
                 className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary-500 to-violet-600"
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
@@ -87,9 +94,8 @@ function ThemeSegment() {
   )
 }
 
-/* ── Language toggle ─────────────────────────────────────────── */
 function LangToggle() {
-  const language    = useAppStore((s) => s.language)
+  const language = useAppStore((s) => s.language)
   const setLanguage = useAppStore((s) => s.setLanguage)
 
   return (
@@ -99,6 +105,7 @@ function LangToggle() {
         return (
           <motion.button
             key={lang}
+            type="button"
             onClick={() => setLanguage(lang)}
             whileTap={{ scale: 0.9 }}
             className={`relative flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
@@ -107,7 +114,7 @@ function LangToggle() {
           >
             {active && (
               <motion.div
-                layoutId="lang-seg"
+                layoutId="settings-lang-seg"
                 className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary-500 to-violet-600"
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
@@ -120,21 +127,24 @@ function LangToggle() {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────── */
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const { role, clearRole } = useApp()
-  const { isDark }          = useTheme()
-  const navigate            = useNavigate()
-  const stats               = useAppStore((s) => ({
-    xp:    s.totalXP,
-    tasks: s.tasksCompleted,
-    streak: s.streak,
-  }))
+  const { isDark } = useTheme()
+  const navigate = useNavigate()
+
+  const totalXP = useAppStore((s) => s.totalXP)
+  const tasksCompleted = useAppStore((s) => s.tasksCompleted)
+  const streak = useAppStore((s) => s.streak)
   const resetStats = useAppStore((s) => s.resetStats)
+
+  if (!role) {
+    return null
+  }
 
   const RoleIcon = role === 'student' ? GraduationCap : Home
 
-  const handleSwitchRole = () => {
+  const handleLogout = () => {
     clearRole()
     navigate('/', { replace: true })
   }
@@ -146,98 +156,113 @@ export default function SettingsPage() {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-sm">
             <Settings className="w-5 h-5 text-white" strokeWidth={1.5} />
           </div>
-          <p className="text-[15px] font-bold text-slate-700 dark:text-slate-200">Settings</p>
+          <p className="text-[15px] font-bold text-slate-700 dark:text-slate-200">
+            {t('settings.title')}
+          </p>
         </div>
         <ThemeToggle />
       </header>
 
       <motion.main
         variants={stagger}
-        initial="initial"
+        initial={false}
         animate="animate"
         className="px-4 pt-5 space-y-5 max-w-lg mx-auto"
       >
-        {/* ── Appearance ── */}
-        <Section title="Appearance">
-          <Row icon={Sun} label="Theme" gradient="from-amber-400 to-orange-500">
+        <Section title={t('settings.appearance')}>
+          <Row icon={Sun} label={t('settings.theme')} gradient="from-amber-400 to-orange-500">
             <ThemeSegment />
           </Row>
           {role === 'student' && (
-            <Row icon={Globe} label="Language" gradient="from-primary-500 to-violet-600">
+            <Row icon={Globe} label={t('settings.language')} gradient="from-primary-500 to-violet-600">
               <LangToggle />
             </Row>
           )}
           {role === 'family' && (
-            <Row icon={Globe} label="Language" gradient="from-primary-500 to-violet-600">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Русский (авто)</span>
+            <Row icon={Globe} label={t('settings.language')} gradient="from-primary-500 to-violet-600">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                {t('settings.languageLockedRu')}
+              </span>
             </Row>
           )}
         </Section>
 
-        {/* ── Account ── */}
-        <Section title="Account">
-          <Row icon={RoleIcon} label="Current role" gradient={role === 'student' ? 'from-indigo-500 to-primary-600' : 'from-rose-500 to-pink-600'}>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 capitalize">
-              {role === 'student' ? 'Student' : 'Family'}
+        <Section title={t('settings.account')}>
+          <Row
+            icon={RoleIcon}
+            label={t('settings.role')}
+            gradient={role === 'student' ? 'from-indigo-500 to-primary-600' : 'from-rose-500 to-pink-600'}
+          >
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {t(`roles.${role}`)}
             </span>
           </Row>
 
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white shadow-sm">
-              <UserCircle className="w-4 h-4" strokeWidth={2} />
+          {role === 'student' && (
+            <div className="flex items-center gap-3 px-4 py-3.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white shadow-sm">
+                <UserCircle className="w-4 h-4" strokeWidth={2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {t('settings.progress')}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {t('settings.progressStats', { xp: totalXP, tasks: tasksCompleted, streak })}
+                </p>
+              </div>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.9 }}
+                onClick={resetStats}
+                className="text-xs text-rose-400 hover:text-rose-600 font-medium transition-colors"
+              >
+                {t('settings.resetStats')}
+              </motion.button>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">My Progress</p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {stats.xp} XP · {stats.tasks} tasks · {stats.streak} day streak
-              </p>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={resetStats}
-              className="text-xs text-rose-400 hover:text-rose-600 font-medium transition-colors"
-            >
-              Reset
-            </motion.button>
-          </div>
+          )}
 
           <motion.button
+            type="button"
             whileTap={{ scale: 0.98 }}
-            onClick={handleSwitchRole}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors"
           >
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center text-white shadow-sm">
               <LogOut className="w-4 h-4" strokeWidth={2} />
             </div>
             <span className="flex-1 text-sm font-medium text-rose-600 dark:text-rose-400">
-              Switch Role
+              {t('settings.logout')}
             </span>
             <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
           </motion.button>
         </Section>
 
-        {/* ── About ── */}
-        <Section title="About">
-          <Row icon={Settings} label="Version" gradient="from-slate-400 to-slate-600">
+        <Section title={t('settings.about')}>
+          <Row icon={Settings} label={t('settings.version')} gradient="from-slate-400 to-slate-600">
             <span className="text-xs text-slate-400 font-mono">0.1.0</span>
           </Row>
-          <Row icon={Database} label="Firestore collection" gradient="from-violet-500 to-primary-600">
+          <Row icon={Database} label={t('settings.firestoreCollection')} gradient="from-violet-500 to-primary-600">
             <span className="text-xs text-slate-400 font-mono">events</span>
           </Row>
         </Section>
 
-        {/* ── Database Tools (host only) ── */}
         {role === 'family' && (
           <motion.div variants={fadeUp} className="space-y-2">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1 flex items-center gap-1.5">
               <Database className="w-3 h-3" />
-              Database Tools
-              <span className="badge bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400 text-[9px] px-1.5">
-                Host only
-              </span>
+              {t('settings.databaseTools')}
             </p>
             <div className="glass-card p-4">
-              <DataImporter />
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-primary-400 animate-spin" />
+                  </div>
+                }
+              >
+                <DataImporter />
+              </Suspense>
             </div>
           </motion.div>
         )}

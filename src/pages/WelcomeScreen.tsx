@@ -13,6 +13,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useStudentProfile } from '@/hooks/useStudentProfile'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 import InstallModal from '@/components/install/InstallModal'
+import FamilyPinModal from '@/components/welcome/FamilyPinModal'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -126,6 +127,7 @@ export default function WelcomeScreen() {
   const [nameError,      setNameError]     = useState('')
   const [submitting,     setSubmitting]    = useState(false)
   const [showInstall,    setShowInstall]   = useState(false)
+  const [showFamilyPin,  setShowFamilyPin] = useState(false)
   const [stepDir,        setStepDir]       = useState<1 | -1>(1)
 
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -156,14 +158,18 @@ export default function WelcomeScreen() {
     return ''
   }
 
+  const enterAsFamily = () => {
+    setRole('family')
+    setShowFamilyPin(false)
+    navigate('/dashboard', { replace: true })
+  }
+
   const handleRoleContinue = () => {
     if (!selectedRole) return
     if (selectedRole === 'student') {
       goToName()
     } else {
-      /* Host family — no name needed */
-      setRole('family')
-      navigate('/dashboard', { replace: true })
+      setShowFamilyPin(true)
     }
   }
 
@@ -497,6 +503,12 @@ export default function WelcomeScreen() {
 
       {/* Install modal */}
       <InstallModal open={showInstall} onClose={() => setShowInstall(false)} />
+
+      <FamilyPinModal
+        open={showFamilyPin}
+        onClose={() => setShowFamilyPin(false)}
+        onSuccess={enterAsFamily}
+      />
     </motion.div>
   )
 }
