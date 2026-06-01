@@ -13,7 +13,8 @@
     "check:firebase": "tsx scripts/check-firebase-env.ts",
     "probe:firestore": "tsx scripts/probe-firestore.ts",
     "seed:events": "tsx scripts/check-firebase-env.ts && tsx scripts/seed-events.ts",
-    "verify:schedule": "tsx scripts/probe-firestore.ts"
+    "verify:schedule": "tsx scripts/probe-firestore.ts",
+    "generate:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "firebase": "^12.14.0",
@@ -37,6 +38,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "postcss": "^8.4.38",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.3",
     "tsx": "^4.22.4",
     "typescript": "^5.4.2",

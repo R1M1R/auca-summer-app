@@ -14,6 +14,9 @@ export function useRoleLanguage(): void {
   useEffect(() => {
     if (!role) return
     const lang = languageForRole(role, language)
+    if (role === 'family' && language !== 'ru') {
+      useAppStore.setState({ language: 'ru' })
+    }
     if (i18n.language.slice(0, 2) !== lang) {
       applyInterfaceLanguage(lang)
     }

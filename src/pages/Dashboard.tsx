@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -28,6 +28,9 @@ import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
+import { isWithinNextDays } from '@/lib/eventWindow'
+import { hasSeenWelcomeModal } from '@/lib/welcomeStorage'
+import WelcomeModal from '@/components/welcome/WelcomeModal'
 
 const BEFORE_MEETING = Date.now() < MEETING_DATE.getTime()
 
@@ -97,6 +100,13 @@ export default function Dashboard() {
   const ensureUserId = useAppStore((s) => s.ensureUserId)
   const { hasNew, count, markSeen } = useStudentPlanNotifications(events)
   const [showPlanModal, setShowPlanModal] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
+
+  useEffect(() => {
+    if (role === 'student' && !hasSeenWelcomeModal()) {
+      setShowWelcome(true)
+    }
+  }, [role])
 
   /* For family: subscribe to live student profile */
   const { profile: studentProfile, loading: profileLoading, touchLastSeen } = useStudentProfile()
@@ -131,8 +141,12 @@ export default function Dashboard() {
 
   const RoleIcon = role === 'student' ? GraduationCap : Home
 
-  const pendingEvents   = events.filter((e) => !e.completed)
-  const completedEvents = events.filter((e) =>  e.completed)
+  const upcomingWindowEvents = useMemo(
+    () => events.filter((e) => isWithinNextDays(e.date, 7)),
+    [events],
+  )
+  const pendingEvents   = upcomingWindowEvents.filter((e) => !e.completed)
+  const completedEvents = upcomingWindowEvents.filter((e) =>  e.completed)
 
   const handleToggle = async (id: string, completed: boolean) => {
     await toggleComplete(id, !completed)
@@ -579,6 +593,10 @@ export default function Dashboard() {
           defaultDate={new Date()}
           mode="student"
         />
+      )}
+
+      {role === 'student' && (
+        <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       )}
 
       <BottomNav />

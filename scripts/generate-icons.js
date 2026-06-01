@@ -1,0 +1,58 @@
+/**
+ * Generates PWA icons from an inline SVG (opaque iOS-style gradient + TimeFlow "T" + peaks).
+ * Run: npm run generate:icons
+ */
+import sharp from 'sharp'
+import { writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const publicDir = join(__dirname, '..', 'public')
+
+const ICON_SVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4f46e5"/>
+      <stop offset="55%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.22"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="256" fill="url(#shine)"/>
+  <path fill="#ffffff" opacity="0.95" d="M148 168h216v52H292v176h-72V220H148z"/>
+  <path fill="#ffffff" opacity="0.35" d="M96 340 L176 260 L248 300 L336 200 L416 280 L416 380 L96 380 Z"/>
+  <circle cx="400" cy="112" r="28" fill="#fbbf24" opacity="0.9"/>
+</svg>`
+
+const OUTPUTS = [
+  { file: 'icon-192x192.png', size: 192 },
+  { file: 'icon-512x512.png', size: 512 },
+  { file: 'apple-touch-icon.png', size: 180 },
+]
+
+async function main() {
+  const svgBuffer = Buffer.from(ICON_SVG)
+
+  for (const { file, size } of OUTPUTS) {
+    const outPath = join(publicDir, file)
+    await sharp(svgBuffer)
+      .resize(size, size, { fit: 'cover' })
+      .png({ compressionLevel: 9, quality: 100 })
+      .toFile(outPath)
+    console.log(`✓ ${file} (${size}×${size})`)
+  }
+
+  writeFileSync(join(publicDir, 'icon-source.svg'), ICON_SVG.trim())
+  console.log('✓ icon-source.svg (source)')
+}
+
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import {
   Leaf, Utensils, Coffee, ThumbsDown, MessageSquare,
   FileText, Save, CheckCircle2, Lock, Loader2,
@@ -16,50 +17,13 @@ const fadeUp = {
 }
 const stagger = { animate: { transition: { staggerChildren: 0.06 } } }
 
-/* ── Section config ──────────────────────────────────────────── */
-const CHIP_SECTIONS = [
-  {
-    key:         'allergies'      as keyof StudentPreferences,
-    label:       'Allergies & Intolerances',
-    placeholder: 'e.g. Gluten, Peanuts…',
-    Icon:        Leaf,
-    gradient:    'from-rose-500 to-red-600',
-    chipColor:   'from-rose-400 to-rose-500',
-  },
-  {
-    key:         'favoriteFoods'  as keyof StudentPreferences,
-    label:       'Favorite Foods',
-    placeholder: 'e.g. Pizza, Sushi…',
-    Icon:        Utensils,
-    gradient:    'from-emerald-500 to-teal-600',
-    chipColor:   'from-emerald-400 to-teal-500',
-  },
-  {
-    key:         'favoriteDrinks' as keyof StudentPreferences,
-    label:       'Favorite Drinks',
-    placeholder: 'e.g. Green tea, Lemonade…',
-    Icon:        Coffee,
-    gradient:    'from-amber-500 to-orange-500',
-    chipColor:   'from-amber-400 to-orange-500',
-  },
-  {
-    key:         'dislikes'       as keyof StudentPreferences,
-    label:       'Dislikes',
-    placeholder: 'e.g. Spicy food, Onions…',
-    Icon:        ThumbsDown,
-    gradient:    'from-slate-500 to-slate-700',
-    chipColor:   'from-slate-400 to-slate-600',
-  },
-] as const
-
-/* ─────────────────────────────────────────────────────────────── */
 interface Props { role: UserRole }
 
 export default function PreferencesTab({ role }: Props) {
+  const { t, i18n } = useTranslation()
   const isFamily = role === 'family'
   const { preferences: remote, loading, saving, lastSaved, savePreferences } = usePreferences()
 
-  /* Local draft — only used when student is editing */
   const [draft,   setDraft]   = useState(remote)
   const [dirty,   setDirty]   = useState(false)
   const [saved,   setSaved]   = useState(false)
@@ -67,6 +31,41 @@ export default function PreferencesTab({ role }: Props) {
 
   const lang = useAppLanguage()
   const displayPrefs = localizePreferences(remote, role, lang)
+
+  const CHIP_SECTIONS = useMemo(() => [
+    {
+      key:         'allergies' as keyof StudentPreferences,
+      label:       t('diary.prefs.allergies'),
+      placeholder: t('diary.prefs.allergiesPh'),
+      Icon:        Leaf,
+      gradient:    'from-rose-500 to-red-600',
+      chipColor:   'from-rose-400 to-rose-500',
+    },
+    {
+      key:         'favoriteFoods' as keyof StudentPreferences,
+      label:       t('diary.prefs.favoriteFoods'),
+      placeholder: t('diary.prefs.favoriteFoodsPh'),
+      Icon:        Utensils,
+      gradient:    'from-emerald-500 to-teal-600',
+      chipColor:   'from-emerald-400 to-teal-500',
+    },
+    {
+      key:         'favoriteDrinks' as keyof StudentPreferences,
+      label:       t('diary.prefs.favoriteDrinks'),
+      placeholder: t('diary.prefs.favoriteDrinksPh'),
+      Icon:        Coffee,
+      gradient:    'from-amber-500 to-orange-500',
+      chipColor:   'from-amber-400 to-orange-500',
+    },
+    {
+      key:         'dislikes' as keyof StudentPreferences,
+      label:       t('diary.prefs.dislikes'),
+      placeholder: t('diary.prefs.dislikesPh'),
+      Icon:        ThumbsDown,
+      gradient:    'from-slate-500 to-slate-700',
+      chipColor:   'from-slate-400 to-slate-600',
+    },
+  ], [t])
 
   useEffect(() => {
     if (!dirty && !isFamily) setDraft(remote)
@@ -86,7 +85,7 @@ export default function PreferencesTab({ role }: Props) {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (e) {
-      setSaveErr(e instanceof Error ? e.message : 'Save failed')
+      setSaveErr(e instanceof Error ? e.message : t('diary.prefs.saveFailed'))
     }
   }
 
@@ -98,7 +97,6 @@ export default function PreferencesTab({ role }: Props) {
     )
   }
 
-  /* ── Read-Only banner (family) ── */
   const readOnlyBanner = isFamily && (
     <motion.div
       variants={fadeUp}
@@ -106,19 +104,20 @@ export default function PreferencesTab({ role }: Props) {
     >
       <Lock className="w-4 h-4 text-amber-500 shrink-0" />
       <div>
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Read-only view</p>
+        <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">{t('diary.prefs.readOnlyTitle')}</p>
         <p className="text-[11px] text-amber-600/70 dark:text-amber-500/70 mt-0.5">
-          This is the student's personal preference profile. Updates sync in real time.
+          {t('diary.prefs.readOnlyHint')}
         </p>
       </div>
     </motion.div>
   )
 
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+
   return (
     <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-5 pb-4">
       {readOnlyBanner}
 
-      {/* Chip sections */}
       {CHIP_SECTIONS.map(({ key, label, placeholder, Icon, gradient, chipColor }) => (
         <motion.div key={key} variants={fadeUp} className="glass-card p-4 space-y-3">
           <div className="flex items-center gap-3">
@@ -138,53 +137,54 @@ export default function PreferencesTab({ role }: Props) {
         </motion.div>
       ))}
 
-      {/* Wishes */}
       <motion.div variants={fadeUp} className="glass-card p-4 space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-sm">
             <MessageSquare className="w-4 h-4" strokeWidth={1.8} />
           </div>
-          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">General Wishes</span>
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('diary.prefs.wishes')}</span>
         </div>
         {isFamily ? (
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            {displayPrefs.wishes || <span className="text-slate-300 dark:text-slate-600 italic">No wishes specified</span>}
+            {displayPrefs.wishes || (
+              <span className="text-slate-300 dark:text-slate-600 italic">{t('diary.prefs.wishesEmpty')}</span>
+            )}
           </p>
         ) : (
           <textarea
             value={draft.wishes}
             onChange={(e) => update('wishes', e.target.value)}
-            placeholder="e.g. I'd love to try local Kyrgyz food, especially kuurdak…"
+            placeholder={t('diary.prefs.wishesPh')}
             rows={3}
             className="input-field resize-none text-sm"
           />
         )}
       </motion.div>
 
-      {/* Dietary Notes */}
       <motion.div variants={fadeUp} className="glass-card p-4 space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white shadow-sm">
             <FileText className="w-4 h-4" strokeWidth={1.8} />
           </div>
-          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Dietary Notes</span>
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('diary.prefs.dietaryNotes')}</span>
         </div>
         {isFamily ? (
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            {displayPrefs.dietaryNotes || <span className="text-slate-300 dark:text-slate-600 italic">No notes</span>}
+            {displayPrefs.dietaryNotes || (
+              <span className="text-slate-300 dark:text-slate-600 italic">{t('diary.prefs.notesEmpty')}</span>
+            )}
           </p>
         ) : (
           <textarea
             value={draft.dietaryNotes}
             onChange={(e) => update('dietaryNotes', e.target.value)}
-            placeholder="e.g. I'm vegetarian, no pork or beef…"
+            placeholder={t('diary.prefs.dietaryNotesPh')}
             rows={3}
             className="input-field resize-none text-sm"
           />
         )}
       </motion.div>
 
-      {/* Save button (student only) */}
       {!isFamily && (
         <motion.div variants={fadeUp} className="space-y-2">
           <AnimatePresence>
@@ -216,18 +216,25 @@ export default function PreferencesTab({ role }: Props) {
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Translating…</span>
+                <span>{t('diary.prefs.translating')}</span>
               </>
             ) : saved ? (
-              <><CheckCircle2 className="w-4 h-4" /> Saved!</>
+              <><CheckCircle2 className="w-4 h-4" /> {t('diary.prefs.saved')}</>
             ) : (
-              <><Save className="w-4 h-4" /> Save Preferences</>
+              <><Save className="w-4 h-4" /> {t('diary.prefs.save')}</>
             )}
           </motion.button>
 
           {lastSaved && !dirty && (
             <p className="text-center text-[11px] text-slate-400">
-              Last saved {lastSaved.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {t('diary.prefs.lastSaved', {
+                time: lastSaved.toLocaleString(dateLocale, {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+              })}
             </p>
           )}
         </motion.div>

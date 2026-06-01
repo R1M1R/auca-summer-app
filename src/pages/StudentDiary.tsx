@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import {
   BookHeart, Star, Sliders,
   GraduationCap, Home, Lock,
@@ -12,31 +13,12 @@ import BottomNav        from '@/components/BottomNav'
 import ThemeToggle      from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
-/* ── Types ───────────────────────────────────────────────────── */
 type Tab = 'preferences' | 'impressions'
 
-/* ── Page animation ──────────────────────────────────────────── */
-
-/* ── Tab config ──────────────────────────────────────────────── */
-const TABS = [
-  {
-    id:       'preferences' as Tab,
-    label:    'My Preferences',
-    Icon:     Sliders,
-    gradient: 'from-emerald-500 to-teal-600',
-  },
-  {
-    id:       'impressions' as Tab,
-    label:    'Daily Impressions',
-    Icon:     Star,
-    gradient: 'from-primary-500 to-violet-600',
-  },
-]
-
-/* ─────────────────────────────────────────────────────────────── */
 export default function StudentDiary() {
   const { role }   = useApp()
   const { isDark } = useTheme()
+  const { t }      = useTranslation()
   const [tab, setTab]         = useState<Tab>('preferences')
   const [tabDir, setTabDir]   = useState<1 | -1>(1)
 
@@ -45,9 +27,24 @@ export default function StudentDiary() {
 
   const RoleIcon = isStudent ? GraduationCap : Home
 
+  const TABS = [
+    {
+      id:       'preferences' as Tab,
+      label:    t('diary.tabPreferences'),
+      Icon:     Sliders,
+      gradient: 'from-emerald-500 to-teal-600',
+    },
+    {
+      id:       'impressions' as Tab,
+      label:    t('diary.tabImpressions'),
+      Icon:     Star,
+      gradient: 'from-primary-500 to-violet-600',
+    },
+  ]
+
   const switchTab = (next: Tab) => {
-    const nextIdx = TABS.findIndex((t) => t.id === next)
-    const curIdx  = TABS.findIndex((t) => t.id === tab)
+    const nextIdx = TABS.findIndex((item) => item.id === next)
+    const curIdx  = TABS.findIndex((item) => item.id === tab)
     setTabDir(nextIdx > curIdx ? 1 : -1)
     setTab(next)
   }
@@ -62,30 +59,29 @@ export default function StudentDiary() {
           <div>
             <div className="flex items-center gap-1.5">
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Student Diary
+                {t('diary.title')}
               </p>
               {isFamily && (
                 <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
                   <Lock className="w-2.5 h-2.5" />
-                  Read-only
+                  {t('diary.readOnly')}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <RoleIcon className="w-3.5 h-3.5 text-primary-400" strokeWidth={2} />
               <span className="text-[11px] font-medium text-primary-500 dark:text-primary-400">
-                {isStudent ? 'Your diary' : "Student's profile"}
+                {isStudent ? t('diary.yourDiary') : t('diary.studentProfile')}
               </span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <LanguageSwitcher compact />
+          {!isFamily && <LanguageSwitcher compact />}
           <ThemeToggle />
         </div>
       </header>
 
-      {/* ── Tab bar (sticky below header) ── */}
       <div className="sticky top-[61px] z-20 mx-4 mt-3">
         <div className="glass-card p-1 flex gap-1 rounded-2xl">
           {TABS.map(({ id, label, Icon, gradient }) => {
@@ -114,7 +110,6 @@ export default function StudentDiary() {
         </div>
       </div>
 
-      {/* ── Tab content ── */}
       <div className="px-4 pt-4 max-w-lg mx-auto">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

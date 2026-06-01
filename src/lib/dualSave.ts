@@ -71,7 +71,30 @@ export async function buildPreferencesRussianFields(input: {
   }
 }
 
+export interface DiaryBilingual {
+  text:    string
+  text_ru: string
+}
+
+/** Persist diary text in both EN and RU based on the language the student wrote in. */
+export async function buildDiaryBilingualFields(
+  text: string,
+  sourceLang: 'en' | 'ru',
+): Promise<DiaryBilingual> {
+  const trimmed = text.trim()
+  if (!trimmed) return { text: '', text_ru: '' }
+
+  if (sourceLang === 'ru') {
+    const textEn = await translateText(trimmed, 'en')
+    return { text: textEn, text_ru: trimmed }
+  }
+
+  const textRu = await translateText(trimmed, 'ru')
+  return { text: trimmed, text_ru: textRu }
+}
+
+/** @deprecated Use buildDiaryBilingualFields */
 export async function buildDiaryRussianFields(text: string): Promise<{ text_ru: string }> {
-  const text_ru = await translateText(text, 'ru')
+  const { text_ru } = await buildDiaryBilingualFields(text, 'en')
   return { text_ru }
 }

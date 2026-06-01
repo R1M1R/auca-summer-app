@@ -176,6 +176,9 @@ export default function SurvivalGuide() {
             defaultOpen
           >
             <div className="space-y-2">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed glass-card px-4 py-3 border-primary-200/40 dark:border-primary-800/30">
+                <Trans i18nKey="guide.sections.transport.routeAppsOnly" components={{ strong: <strong /> }} />
+              </p>
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                 {t('guide.sections.transport.faresTitle')}
               </p>

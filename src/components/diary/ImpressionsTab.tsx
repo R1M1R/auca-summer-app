@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import {
   PenLine, Send, Trash2, Edit3,
   Loader2, CalendarDays, Wifi,
@@ -10,30 +11,32 @@ import { localizeDiaryEntry } from '@/lib/localizedContent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import type { DiaryEntry, MoodLevel, UserRole } from '@/types'
 
-/* ── Helpers ─────────────────────────────────────────────────── */
-const TODAY       = new Date()
-const TODAY_KEY   = toDateKey(TODAY)
+const TODAY     = new Date()
+const TODAY_KEY = toDateKey(TODAY)
 
-function formatEntryDate(d: Date): string {
-  const diff = Math.floor((new Date().setHours(0,0,0,0) - d.setHours(0,0,0,0)) / 86_400_000)
-  if (diff === 0)  return 'Today'
-  if (diff === 1)  return 'Yesterday'
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+function formatEntryDate(d: Date, t: (key: string) => string, locale: string): string {
+  const diff = Math.floor(
+    (new Date().setHours(0, 0, 0, 0) - d.setHours(0, 0, 0, 0)) / 86_400_000,
+  )
+  if (diff === 0) return t('diary.impressions.today')
+  if (diff === 1) return t('diary.impressions.yesterday')
+  return d.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-/* ── Entry composer (today) ─────────────────────────────────── */
 interface ComposerProps {
   existing: DiaryEntry | null
 }
 
 function EntryComposer({ existing }: ComposerProps) {
+  const { t, i18n } = useTranslation()
   const { saveEntry, saving, error } = useDiaryMutations()
-  const [text,    setText]   = useState(existing?.text  ?? '')
-  const [mood,    setMood]   = useState<MoodLevel | null>(existing?.mood ?? null)
+  const [text,    setText]    = useState(existing?.text  ?? '')
+  const [mood,    setMood]    = useState<MoodLevel | null>(existing?.mood ?? null)
   const [editing, setEditing] = useState(!existing)
   const [saved,   setSaved]   = useState(false)
 
-  /* Sync if Firestore pushes an update while we're viewing */
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+
   useEffect(() => {
     if (!editing) {
       setText(existing?.text  ?? '')
@@ -49,7 +52,6 @@ function EntryComposer({ existing }: ComposerProps) {
     setTimeout(() => setSaved(false), 3000)
   }
 
-  /* ── View mode ── */
   if (existing && !editing) {
     return (
       <motion.div
@@ -59,7 +61,7 @@ function EntryComposer({ existing }: ComposerProps) {
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-primary-500 uppercase tracking-wider flex items-center gap-1.5">
             <CalendarDays className="w-3.5 h-3.5" />
-            Today's Entry
+            {t('diary.impressions.todayEntry')}
           </span>
           <motion.button
             whileTap={{ scale: 0.88 }}
@@ -67,7 +69,7 @@ function EntryComposer({ existing }: ComposerProps) {
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-primary-500 transition-colors"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            Edit
+            {t('diary.impressions.edit')}
           </motion.button>
         </div>
 
@@ -82,39 +84,40 @@ function EntryComposer({ existing }: ComposerProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="text-[11px] text-emerald-500 font-medium"
           >
-            ✓ Saved
+            {t('diary.impressions.saved')}
           </motion.p>
         )}
       </motion.div>
     )
   }
 
-  /* ── Edit / New mode ── */
   return (
     <motion.div layout className="glass-card p-4 space-y-4 border-primary-200/40 dark:border-primary-800/30">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-primary-500 uppercase tracking-wider flex items-center gap-1.5">
           <PenLine className="w-3.5 h-3.5" />
-          {existing ? 'Edit Today' : "Today's Impressions"}
+          {existing ? t('diary.impressions.editToday') : t('diary.impressions.todayImpressions')}
         </span>
         <span className="text-[11px] text-slate-400">
-          {TODAY.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+          {TODAY.toLocaleDateString(dateLocale, { weekday: 'long', month: 'short', day: 'numeric' })}
         </span>
       </div>
 
-      {/* Mood picker */}
       <div className="space-y-1.5">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">How was your day?</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          {t('diary.impressions.howWasDay')}
+        </p>
         <MoodSelector value={mood} onChange={setMood} size="lg" />
       </div>
 
-      {/* Text */}
       <div className="space-y-1.5">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Your thoughts</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          {t('diary.impressions.yourThoughts')}
+        </p>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Write a few sentences about your day…"
+          placeholder={t('diary.impressions.thoughtsPh')}
           rows={4}
           maxLength={1000}
           className="input-field resize-none text-sm leading-relaxed"
@@ -124,7 +127,6 @@ function EntryComposer({ existing }: ComposerProps) {
         </p>
       </div>
 
-      {/* Error */}
       <AnimatePresence>
         {error && (
           <motion.p
@@ -136,7 +138,6 @@ function EntryComposer({ existing }: ComposerProps) {
         )}
       </AnimatePresence>
 
-      {/* Actions */}
       <div className="flex gap-3">
         {existing && (
           <motion.button
@@ -144,7 +145,7 @@ function EntryComposer({ existing }: ComposerProps) {
             onClick={() => { setEditing(false); setText(existing.text); setMood(existing.mood) }}
             className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-500"
           >
-            Cancel
+            {t('diary.impressions.cancel')}
           </motion.button>
         )}
         <motion.button
@@ -156,7 +157,7 @@ function EntryComposer({ existing }: ComposerProps) {
         >
           {saving
             ? <Loader2 className="w-4 h-4 animate-spin" />
-            : <><Send className="w-4 h-4" /> Save Entry</>
+            : <><Send className="w-4 h-4" /> {t('diary.impressions.saveEntry')}</>
           }
         </motion.button>
       </div>
@@ -164,10 +165,18 @@ function EntryComposer({ existing }: ComposerProps) {
   )
 }
 
-/* ── Past entry card ─────────────────────────────────────────── */
-function EntryCard({ entry, canDelete, onDelete }: {
-  entry: DiaryEntry; canDelete: boolean; onDelete: () => void
+function EntryCard({
+  entry,
+  canDelete,
+  onDelete,
+  formatDate,
+}: {
+  entry: DiaryEntry
+  canDelete: boolean
+  onDelete: () => void
+  formatDate: (d: Date) => string
 }) {
+  const { t } = useTranslation()
   const [confirmDel, setConfirmDel] = useState(false)
 
   return (
@@ -181,7 +190,7 @@ function EntryCard({ entry, canDelete, onDelete }: {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            {formatEntryDate(new Date(entry.date))}
+            {formatDate(new Date(entry.date))}
           </span>
           <MoodBadge mood={entry.mood} />
         </div>
@@ -200,7 +209,6 @@ function EntryCard({ entry, canDelete, onDelete }: {
         {entry.text}
       </p>
 
-      {/* Inline delete confirm */}
       <AnimatePresence>
         {confirmDel && (
           <motion.div
@@ -208,12 +216,18 @@ function EntryCard({ entry, canDelete, onDelete }: {
             exit={{ height: 0, opacity: 0 }}
             className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800"
           >
-            <span className="text-xs text-slate-500 flex-1">Delete this entry?</span>
-            <button onClick={() => setConfirmDel(false)} className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg">
-              Cancel
+            <span className="text-xs text-slate-500 flex-1">{t('diary.impressions.deleteConfirm')}</span>
+            <button
+              onClick={() => setConfirmDel(false)}
+              className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg"
+            >
+              {t('diary.impressions.cancel')}
             </button>
-            <button onClick={onDelete} className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 px-2.5 py-1 rounded-lg transition-colors">
-              Delete
+            <button
+              onClick={onDelete}
+              className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 px-2.5 py-1 rounded-lg transition-colors"
+            >
+              {t('diary.impressions.delete')}
             </button>
           </motion.div>
         )}
@@ -222,14 +236,17 @@ function EntryCard({ entry, canDelete, onDelete }: {
   )
 }
 
-/* ── Main ImpressionsTab ─────────────────────────────────────── */
 interface Props { role: UserRole }
 
 export default function ImpressionsTab({ role }: Props) {
+  const { t, i18n } = useTranslation()
   const isStudent = role === 'student'
   const lang      = useAppLanguage()
   const { entries, loading, error } = useDiaryEntries()
   const { deleteEntry } = useDiaryMutations()
+
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+  const formatDate = (d: Date) => formatEntryDate(d, t, dateLocale)
 
   const todayEntry = entries.find((e) => toDateKey(e.date) === TODAY_KEY) ?? null
   const todayDisplay = todayEntry ? localizeDiaryEntry(todayEntry, role, lang) : null
@@ -239,7 +256,6 @@ export default function ImpressionsTab({ role }: Props) {
 
   return (
     <div className="space-y-5 pb-4">
-      {/* Family live sync indicator */}
       {role === 'family' && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -248,29 +264,25 @@ export default function ImpressionsTab({ role }: Props) {
         >
           <Wifi className="w-3.5 h-3.5 text-emerald-500" />
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            Live sync — updates appear automatically
+            {t('diary.impressions.liveSync')}
           </span>
         </motion.div>
       )}
 
-      {/* Today's entry composer (student only) */}
       {isStudent && <EntryComposer existing={todayEntry} />}
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 text-primary-400 animate-spin" />
         </div>
       )}
 
-      {/* Error */}
       {!loading && error && (
         <div className="glass-card px-4 py-3 border-rose-200 dark:border-rose-800/40">
           <p className="text-sm text-rose-500">{error}</p>
         </div>
       )}
 
-      {/* Family: today's entry read-only */}
       {role === 'family' && todayDisplay && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -280,7 +292,7 @@ export default function ImpressionsTab({ role }: Props) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-primary-500 uppercase tracking-wider flex items-center gap-1.5">
               <CalendarDays className="w-3.5 h-3.5" />
-              Today
+              {t('diary.impressions.today')}
             </span>
             <MoodBadge mood={todayDisplay.mood} />
           </div>
@@ -290,12 +302,11 @@ export default function ImpressionsTab({ role }: Props) {
         </motion.div>
       )}
 
-      {/* Past entries section */}
       {!loading && (
         <div className="space-y-3">
           {pastEntries.length > 0 && (
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
-              Previous entries ({pastEntries.length})
+              {t('diary.impressions.previousEntries', { count: pastEntries.length })}
             </p>
           )}
 
@@ -306,11 +317,11 @@ export default function ImpressionsTab({ role }: Props) {
                 entry={entry}
                 canDelete={isStudent}
                 onDelete={() => deleteEntry(entry.id)}
+                formatDate={formatDate}
               />
             ))}
           </AnimatePresence>
 
-          {/* Empty state */}
           {entries.length === 0 && !loading && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -320,9 +331,11 @@ export default function ImpressionsTab({ role }: Props) {
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <PenLine className="w-7 h-7 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
               </div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No diary entries yet</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {t('diary.impressions.noEntries')}
+              </p>
               {isStudent && (
-                <p className="text-xs text-slate-400">Write your first impression above ↑</p>
+                <p className="text-xs text-slate-400">{t('diary.impressions.writeFirst')}</p>
               )}
             </motion.div>
           )}
