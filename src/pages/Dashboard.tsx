@@ -16,6 +16,7 @@ import { useEvents, useEventMutations } from '@/hooks/useEvents'
 import { useLocalizedEvents } from '@/hooks/useLocalizedEvents'
 import { useStudentPlanNotifications } from '@/hooks/useStudentPlanNotifications'
 import { useStudentProfile } from '@/hooks/useStudentProfile'
+import { getStudentPresenceState } from '@/lib/studentPresence'
 import { isStudentPlanForFamily } from '@/lib/eventPermissions'
 import AddEventModal from '@/components/schedule/AddEventModal'
 import { isConfigured } from '@/lib/firebase'
@@ -109,9 +110,18 @@ export default function Dashboard() {
     }
   }, [updateStreak, role, touchLastSeen, ensureUserId])
 
-  /* Resolve student name: Firestore > local cache > fallback */
+  /* Student name: Firestore for student; local cache only for student role */
   const studentName =
-    studentProfile?.name || cachedName || t('dashboard.studentFallback')
+    role === 'student'
+      ? (studentProfile?.name || cachedName || t('dashboard.studentFallback'))
+      : (studentProfile?.name?.trim() || t('dashboard.studentFallback'))
+
+  const familyPresence =
+    role === 'family' ? getStudentPresenceState(studentProfile) : null
+  const familyDisplayName =
+    familyPresence === 'awaiting'
+      ? t('dashboard.awaitingRegistration')
+      : studentProfile?.name?.trim() || t('dashboard.awaitingRegistration')
 
   const hour = new Date().getHours()
   const greetingKey =
@@ -198,39 +208,73 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mt-3 glass-card px-4 py-3 flex items-center gap-3 border-emerald-200/50 dark:border-emerald-800/30"
+              className={`mt-3 glass-card px-4 py-3 flex items-center gap-3 ${
+                familyPresence === 'online'
+                  ? 'border-emerald-200/50 dark:border-emerald-800/30'
+                  : 'border-slate-200/50 dark:border-slate-700/40'
+              }`}
             >
               <div className="relative">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white text-sm font-black shadow-sm">
-                  {studentName.charAt(0).toUpperCase()}
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shadow-sm ${
+                  familyPresence === 'online'
+                    ? 'bg-gradient-to-br from-primary-500 to-violet-600'
+                    : 'bg-slate-400 dark:bg-slate-600'
+                }`}>
+                  {familyPresence === 'awaiting'
+                    ? '?'
+                    : familyDisplayName.charAt(0).toUpperCase()}
                 </div>
-                {/* Online indicator */}
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900" />
+                {familyPresence === 'online' && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900" />
+                )}
+                {familyPresence === 'offline' && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-slate-400 border-2 border-white dark:border-slate-900" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {t('dashboard.studentLabel')}{' '}
-                  <span className="text-primary-500">{studentName}</span>
+                  <span className={familyPresence === 'awaiting'
+                    ? 'text-slate-500 dark:text-slate-400'
+                    : 'text-primary-500'
+                  }>
+                    {familyDisplayName}
+                  </span>
                 </p>
                 <p className="text-xs text-slate-400 truncate">
-                  {studentProfile?.lastSeen
-                    ? t('dashboard.lastActive', {
-                        time: studentProfile.lastSeen.toLocaleString(
-                          i18n.language === 'ru' ? 'ru-RU' : 'en-US',
-                          { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
-                        ),
-                      })
-                    : t('dashboard.currentlyActive')
+                  {familyPresence === 'awaiting'
+                    ? t('dashboard.waitingForStudent')
+                    : familyPresence === 'online'
+                      ? t('dashboard.currentlyActive')
+                      : studentProfile?.lastSeen
+                        ? t('dashboard.lastActive', {
+                            time: studentProfile.lastSeen.toLocaleString(
+                              i18n.language === 'ru' ? 'ru-RU' : 'en-US',
+                              { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
+                            ),
+                          })
+                        : t('dashboard.noActivityYet')
                   }
                 </p>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <span className="text-[10px] font-bold">{t('dashboard.active')}</span>
-              </div>
+              {familyPresence === 'online' ? (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="text-[10px] font-bold">{t('dashboard.active')}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex rounded-full h-2 w-2 bg-slate-400" />
+                  <span className="text-[10px] font-bold">
+                    {familyPresence === 'awaiting'
+                      ? t('dashboard.awaitingRegistration')
+                      : t('dashboard.offline')}
+                  </span>
+                </div>
+              )}
             </motion.div>
           )}
 

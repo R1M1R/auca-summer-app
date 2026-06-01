@@ -137,7 +137,7 @@ function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
 
   const now       = new Date()
   const isPast    = display.date < now
-  const useExact  = display.hasExactTime !== false
+  const useExact  = display.hasExactTime !== false && !display.timeDisplay
 
   const startStr = useExact
     ? timeLabel(display.date)

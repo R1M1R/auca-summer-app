@@ -1,4 +1,5 @@
 import type { AppLanguage, AppEvent, DiaryEntry, StudentPreferences, UserRole } from '@/types'
+import { eventHasExactTime } from '@/lib/eventTime'
 
 /** Family always reads Russian stored fields */
 export function audienceForRole(role: UserRole): 'family' | 'student' {
@@ -28,7 +29,7 @@ export function pickLocalizedTime(
 }
 
 export function localizeEvent(event: AppEvent, role: UserRole, lang: AppLanguage): AppEvent {
-  const exactTime = event.hasExactTime !== false
+  const exactTime = eventHasExactTime(event)
   return {
     ...event,
     title:       pickLocalized(event.title,       event.titleRu,       role, lang),

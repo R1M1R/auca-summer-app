@@ -1,4 +1,4 @@
-import{c as z,f as $,j as e,A as p,m as t,S as j,X as V,h as U,P as B,D as L,k as X,u as Z,e as J,l as P,r as c,C as Q,n as D}from"./index-BP8bnQ2q.js";import{u as ee}from"./useStudentProfile-B6yifLqP.js";import{C as k,G as te}from"./graduation-cap-4SqN7ylh.js";import{L as se}from"./LanguageSwitcher-o1fnXq-_.js";import{u as ae,T as le}from"./ThemeToggle-BUdE-0J-.js";import{S as ie}from"./sparkles-nYT2hw0G.js";import{H as re}from"./home-BpuKOEW7.js";import{A as ne}from"./arrow-left-C2_SPZeQ.js";/**
+import{c as z,f as $,j as e,A as p,m as t,S as j,X as V,h as U,P as B,D as L,k as X,u as Z,e as J,l as P,r as c,C as Q,n as D}from"./index-DTFnAmEe.js";import{u as ee}from"./useStudentProfile-BHVVjOHB.js";import{C as k,G as te}from"./graduation-cap-7jvzrLRg.js";import{L as se}from"./LanguageSwitcher-CtlDgY68.js";import{u as ae,T as le}from"./ThemeToggle-6MgzyTUF.js";import{S as ie}from"./sparkles-CT3lNjNE.js";import{H as re}from"./home-DcvgTK4Z.js";import{A as ne}from"./arrow-left-Bm1gp9DM.js";/**
  * @license lucide-react v0.378.0 - ISC
  *
  * This source code is licensed under the ISC license.

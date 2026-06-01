@@ -1,5 +1,6 @@
 import type { AppEvent, FirestoreEvent } from '@/types'
 import { ADMIN_CREATOR } from '@/types'
+import { eventHasExactTime } from '@/lib/eventTime'
 import { notifyDemoUpdate, subscribeDemoStorage } from '@/lib/demoStorage'
 import { buildEventsFromSchedule } from '@/lib/buildScheduleEvents'
 
@@ -20,7 +21,11 @@ export function fromFirestore(id: string, raw: FirestoreEvent): AppEvent {
     locationRu:      raw.location_ru,
     timeRu:          raw.time_ru,
     timeEn:          raw.time_en,
-    hasExactTime:    raw.hasExactTime ?? true,
+    hasExactTime:    eventHasExactTime({
+      hasExactTime: raw.hasExactTime,
+      timeRu:       raw.time_ru,
+      timeEn:       raw.time_en,
+    }),
     category:        raw.category,
     createdBy:       legacyHost ? ADMIN_CREATOR : raw.createdBy,
     isEditable:      raw.isEditable ?? (!legacyHost && raw.createdBy !== ADMIN_CREATOR),
