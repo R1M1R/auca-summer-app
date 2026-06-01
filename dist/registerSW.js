@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/auca-summer-app/sw.js', { scope: '/auca-summer-app/' })})}

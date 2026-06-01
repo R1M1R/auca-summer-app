@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AUCA Summer  Bishkek">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="45%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="mountain-far" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <linearGradient id="mountain-near" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="book" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- App tile background -->
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+
+  <!-- Decorative summer glow -->
+  <circle cx="380" cy="132" r="88" fill="url(#sun)" opacity="0.95" filter="url(#soft)"/>
+
+  <!-- Distant peaks (Ala-Too / Tien Shan) -->
+  <path fill="url(#mountain-far)" opacity="0.85"
+    d="M0 340 L120 200 L200 260 L300 160 L400 240 L512 300 L512 512 L0 512 Z"/>
+
+  <!-- Foreground mountains -->
+  <path fill="url(#mountain-near)"
+    d="M0 400 L80 280 L160 340 L256 220 L340 310 L420 250 L512 360 L512 512 L0 512 Z"/>
+
+  <!-- Education: open book + subtle minaret silhouette -->
+  <g transform="translate(256 300)">
+    <!-- Minaret hint (Bishkek skyline) -->
+    <rect x="-6" y="-118" width="12" height="72" rx="4" fill="#e0e7ff" opacity="0.35"/>
+    <ellipse cx="0" cy="-122" rx="14" ry="8" fill="#e0e7ff" opacity="0.4"/>
+
+    <!-- Book -->
+    <path fill="url(#book)" d="M-72 8 Q-72 -24 0 -40 Q72 -24 72 8 L72 56 Q72 72 0 80 Q-72 72 -72 56 Z"/>
+    <path fill="#4f46e5" opacity="0.25" d="M0 -40 L0 80"/>
+    <line x1="-48" y1="-8" x2="-12" y2="-2" stroke="#ede9fe" stroke-width="6" stroke-linecap="round"/>
+    <line x1="-48" y1="12" x2="-8" y2="18" stroke="#ede9fe" stroke-width="6" stroke-linecap="round"/>
+    <line x1="12" y1="-2" x2="48" y2="-8" stroke="#ede9fe" stroke-width="6" stroke-linecap="round"/>
+    <line x1="8" y1="18" x2="48" y2="12" stroke="#ede9fe" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- Summer accent  small leaf -->
+  <path fill="#34d399" opacity="0.9"
+    d="M88 120 C108 96 132 108 124 128 C116 148 92 140 88 120 Z"/>
+</svg>

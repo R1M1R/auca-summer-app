@@ -1,0 +1,37 @@
+{
+  "dailyRoutine": [
+    { "id": "d1", "startTime": "09:00", "endTime": "10:10", "titleRu": "Русский класс", "titleEn": "Russian Class", "type": "academic" },
+    { "id": "d2", "startTime": "10:10", "endTime": "10:25", "titleRu": "Перерыв", "titleEn": "Break", "type": "break" },
+    { "id": "d3", "startTime": "10:25", "endTime": "11:35", "titleRu": "Русский класс", "titleEn": "Russian Class", "type": "academic" },
+    { "id": "d4", "startTime": "11:35", "endTime": "11:50", "titleRu": "Перерыв", "titleEn": "Break", "type": "break" },
+    { "id": "d5", "startTime": "11:50", "endTime": "13:20", "titleRu": "Постсоветский курс", "titleEn": "Post-Soviet Course", "type": "academic" },
+    { "id": "d6", "startTime": "13:30", "endTime": "14:15", "titleRu": "Обед", "titleEn": "Lunch", "type": "break" },
+    { "id": "d7", "startTime": "14:15", "endTime": "17:00", "titleRu": "Сессия домашней работы / внеклассное мероприятие / экскурсия", "titleEn": "Homework session / extracurricular activity / excursion", "type": "academic" }
+  ],
+  "specialEvents": [
+    { "date": "2026-06-05", "timeRu": "Время уточняется", "timeEn": "Time TBD", "titleRu": "Прилет в Бишкек (Встречает AUCA)", "titleEn": "Arrival in Bishkek (Met by AUCA)", "type": "mandatory" },
+    { "date": "2026-06-07", "timeRu": "Ближе к обеду", "timeEn": "Around noon", "titleRu": "Встреча студентов и принимающей семьи", "titleEn": "Meeting of students and host family", "type": "family" },
+    { "date": "2026-06-09", "startTime": "15:30", "endTime": "18:00", "titleRu": "Тур в Исторический Музей с преподавателем", "titleEn": "Historical Museum Tour", "type": "excursion" },
+    { "date": "2026-06-10", "startTime": "15:30", "endTime": "18:00", "titleRu": "Развивающее занятие: Традиционные виды искусства и ремесла", "titleEn": "Arts and crafts class", "type": "academic" },
+    { "date": "2026-06-12", "startTime": "13:30", "endTime": "17:00", "titleRu": "Время для боулинга", "titleEn": "Bowling time", "type": "leisure" },
+    { "date": "2026-06-13", "startTime": "10:00", "endTime": "16:00", "titleRu": "Поездка в Национальный парк Ала Арча", "titleEn": "Ala Archa National Park Trip", "type": "excursion" },
+    { "date": "2026-06-16", "startTime": "15:00", "endTime": "18:00", "titleRu": "Тур в Музей ИЗО им. Гапара Айтиева", "titleEn": "Fine Arts Museum Tour", "type": "excursion" },
+    { "date": "2026-06-19", "startTime": "13:30", "endTime": "17:00", "titleRu": "Посещение местного НПО", "titleEn": "Visit to a local NGO", "type": "excursion" },
+    { "date": "2026-06-20", "startTime": "10:00", "endTime": "17:00", "titleRu": "Поездка в этно-комплекс Супара-Чункурчак", "titleEn": "Supara-Chunkurchak Trip", "type": "excursion" },
+    { "date": "2026-06-21", "startTime": "19:00", "endTime": "21:00", "titleRu": "Тур в Театр оперы и балета", "titleEn": "Opera and Ballet Theater", "type": "leisure" },
+    { "date": "2026-06-23", "startTime": "15:00", "endTime": "17:00", "titleRu": "Посещение церкви и мечети", "titleEn": "Visit to church and mosque", "type": "excursion" },
+    { "date": "2026-06-24", "startTime": "15:00", "endTime": "17:00", "titleRu": "Развивающее занятие: Традиционные виды искусства и ремесла", "titleEn": "Arts and crafts class", "type": "academic" },
+    { "date": "2026-06-26", "endDate": "2026-06-28", "startTime": "12:30", "titleRu": "3х дневный тур на Иссык-Куль", "titleEn": "3-day Issyk-Kul tour", "type": "excursion" },
+    { "date": "2026-06-30", "startTime": "15:00", "endTime": "17:00", "titleRu": "Мастер-класс по установке юрты", "titleEn": "Yurt installation master class", "type": "academic" },
+    { "date": "2026-07-03", "startTime": "13:30", "endTime": "17:00", "titleRu": "Кулинарный мастер-класс", "titleEn": "Culinary master class", "type": "academic" },
+    { "date": "2026-07-04", "startTime": "09:00", "endTime": "17:00", "titleRu": "Пикник в веревочном парке Аркан Токой", "titleEn": "Picnic at Arkan Tokoi", "type": "leisure" },
+    { "date": "2026-07-07", "startTime": "15:00", "endTime": "17:00", "titleRu": "Показ Национальных Игр", "titleEn": "National Games demonstration", "type": "leisure" },
+    { "date": "2026-07-08", "startTime": "15:00", "endTime": "17:00", "titleRu": "Развивающее занятие: Традиционные виды искусства и ремесла", "titleEn": "Arts and crafts class", "type": "academic" },
+    { "date": "2026-07-10", "startTime": "13:30", "endTime": "17:00", "titleRu": "Гончарный мастер-класс", "titleEn": "Pottery master class", "type": "academic" },
+    { "date": "2026-07-11", "startTime": "10:00", "endTime": "16:00", "titleRu": "Тур в Мемориальный комплекс Ата Бейит", "titleEn": "Ata Beyit Tour", "type": "excursion" },
+    { "date": "2026-07-14", "startTime": "15:00", "endTime": "18:00", "titleRu": "Тур в Дом-музей Чынгыза Айтматова", "titleEn": "Chingiz Aitmatov Museum Tour", "type": "excursion" },
+    { "date": "2026-07-17", "endDate": "2026-07-19", "timeRu": "Время уточняется", "timeEn": "Time TBD", "titleRu": "3х дневный тур на Сон-Коль", "titleEn": "3-day Son-Kul tour", "type": "excursion" },
+    { "date": "2026-07-21", "startTime": "15:00", "endTime": "18:00", "titleRu": "Посещение Ошского рынка", "titleEn": "Visit to Osh Bazaar", "type": "excursion" },
+    { "date": "2026-07-22", "startTime": "15:00", "endTime": "17:00", "titleRu": "Развивающее занятие: Традиционные виды искусства и ремесла", "titleEn": "Arts and crafts class", "type": "academic" }
+  ]
+}
