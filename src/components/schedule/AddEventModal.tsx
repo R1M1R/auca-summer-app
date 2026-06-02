@@ -55,6 +55,9 @@ interface Props {
   mode:         'family' | 'student'
 }
 
+type FieldName = 'title' | 'description' | 'date' | 'time' | 'location' | 'duration'
+type FieldErrors = Partial<Record<FieldName, string>>
+
 export default function AddEventModal({ open, onClose, editingEvent, defaultDate, mode }: Props) {
   const { t } = useTranslation()
   const lang  = useAppLanguage()
@@ -71,6 +74,7 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
   const [location,    setLocation]    = useState('')
   const [duration,    setDuration]    = useState<number>(60)
   const [submitting,  setSubmitting]  = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [error,       setError]       = useState<string | null>(null)
 
   useEffect(() => {
@@ -93,18 +97,70 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
       setLocation('')
       setDuration(60)
     }
+    setFieldErrors({})
     setError(null)
   }, [open, editingEvent, defaultDate, isStudent, lang])
 
+  const clearFieldError = (field: FieldName) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  const validate = (): { ok: boolean; parsedDate: Date | null } => {
+    const errors: FieldErrors = {}
+    const titleValue = title.trim()
+    const descriptionValue = description.trim()
+    const locationValue = location.trim()
+
+    if (!titleValue) {
+      errors.title = t('schedule.modal.validation.titleRequired')
+    } else if (titleValue.length < 3) {
+      errors.title = t('schedule.modal.validation.titleTooShort')
+    } else if (titleValue.length > 80) {
+      errors.title = t('schedule.modal.validation.titleTooLong')
+    }
+
+    if (descriptionValue.length > 500) {
+      errors.description = t('schedule.modal.validation.descriptionTooLong')
+    }
+
+    if (!dateStr) {
+      errors.date = t('schedule.modal.validation.dateRequired')
+    }
+
+    if (!timeStr) {
+      errors.time = t('schedule.modal.validation.timeRequired')
+    }
+
+    if (locationValue.length > 120) {
+      errors.location = t('schedule.modal.validation.locationTooLong')
+    }
+
+    if (!Number.isFinite(duration) || duration <= 0) {
+      errors.duration = t('schedule.modal.validation.durationInvalid')
+    }
+
+    const parsedDate = new Date(`${dateStr}T${timeStr}:00`)
+    if (Number.isNaN(parsedDate.getTime())) {
+      if (!errors.date) errors.date = t('schedule.modal.validation.dateInvalid')
+      if (!errors.time) errors.time = t('schedule.modal.validation.timeInvalid')
+    } else if (parsedDate.getTime() <= Date.now()) {
+      errors.date = t('schedule.modal.futureDateError')
+      errors.time = t('schedule.modal.futureDateError')
+    }
+
+    setFieldErrors(errors)
+    return { ok: Object.keys(errors).length === 0, parsedDate }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
-
-    const date = new Date(`${dateStr}T${timeStr}:00`)
-    if (date.getTime() <= Date.now()) {
-      setError(t('schedule.modal.futureDateError'))
-      return
-    }
+    const { ok, parsedDate } = validate()
+    if (!ok || !parsedDate) return
 
     setSubmitting(true)
     setError(null)
@@ -112,7 +168,7 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
       const payload = {
         title:       title.trim(),
         description: description.trim(),
-        date,
+        date:        parsedDate,
         category:    isStudent ? ('student_personal' as const) : category,
         duration,
         location:    location.trim() || undefined,
@@ -184,21 +240,23 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
                 <Field label={t('schedule.modal.title')} Icon={FileText}>
                   <input
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => { setTitle(e.target.value); clearFieldError('title') }}
                     placeholder={isStudent ? t('schedule.modal.titlePlaceholderStudent') : t('schedule.modal.titlePlaceholderHost')}
                     required
                     className="input-field"
                   />
+                  {fieldErrors.title && <FieldError message={fieldErrors.title} />}
                 </Field>
 
                 <Field label={t('schedule.modal.description')} Icon={FileText}>
                   <textarea
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => { setDescription(e.target.value); clearFieldError('description') }}
                     placeholder={t('schedule.modal.descriptionPlaceholder')}
                     rows={2}
                     className="input-field resize-none"
                   />
+                  {fieldErrors.description && <FieldError message={fieldErrors.description} />}
                 </Field>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -206,19 +264,21 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
                     <input
                       type="date"
                       value={dateStr}
-                      onChange={(e) => setDateStr(e.target.value)}
+                      onChange={(e) => { setDateStr(e.target.value); clearFieldError('date') }}
                       required
                       className="input-field"
                     />
+                    {fieldErrors.date && <FieldError message={fieldErrors.date} />}
                   </Field>
                   <Field label={t('schedule.modal.time')} Icon={Clock}>
                     <input
                       type="time"
                       value={timeStr}
-                      onChange={(e) => setTimeStr(e.target.value)}
+                      onChange={(e) => { setTimeStr(e.target.value); clearFieldError('time') }}
                       required
                       className="input-field"
                     />
+                    {fieldErrors.time && <FieldError message={fieldErrors.time} />}
                   </Field>
                 </div>
 
@@ -254,10 +314,11 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
                 <Field label={t('schedule.modal.location')} Icon={MapPin}>
                   <input
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    onChange={(e) => { setLocation(e.target.value); clearFieldError('location') }}
                     placeholder={t('schedule.modal.locationPlaceholder')}
                     className="input-field"
                   />
+                  {fieldErrors.location && <FieldError message={fieldErrors.location} />}
                 </Field>
 
                 <Field label={t('schedule.modal.duration')} Icon={Clock}>
@@ -279,6 +340,7 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
                       </motion.button>
                     ))}
                   </div>
+                  {fieldErrors.duration && <FieldError message={fieldErrors.duration} />}
                 </Field>
 
                 <AnimatePresence>
@@ -340,5 +402,13 @@ function Field({
       </label>
       {children}
     </div>
+  )
+}
+
+function FieldError({ message }: { message: string }) {
+  return (
+    <p className="text-xs text-rose-500 dark:text-rose-400 leading-relaxed">
+      {message}
+    </p>
   )
 }
