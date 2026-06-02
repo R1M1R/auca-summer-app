@@ -26,7 +26,6 @@ import { MEETING_DATE } from '@/hooks/useCountdown'
 import CountdownTimer from '@/components/countdown/CountdownTimer'
 import PreArrivalCard from '@/components/onboarding/PreArrivalCard'
 import ProgramProgressBar from '@/components/ProgramProgressBar'
-import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
@@ -599,8 +598,6 @@ export default function Dashboard() {
       {role === 'student' && (
         <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       )}
-
-      <BottomNav />
     </div>
   )
 }

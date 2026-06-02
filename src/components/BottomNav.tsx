@@ -14,16 +14,24 @@ const ITEMS = [
   { key: 'settings',    path: '/settings',   Icon: Settings        },
 ] as const
 
+/** Show bottom nav on main app tabs (not welcome / redirects). */
+export function shouldShowBottomNav(pathname: string, hasRole: boolean): boolean {
+  if (!hasRole) return false
+  if (pathname === '/') return false
+  if (pathname === '/culture') return true
+  return ITEMS.some(
+    (i) => pathname === i.path || (i.path !== '/dashboard' && pathname.startsWith(i.path)),
+  )
+}
+
 export default function BottomNav() {
   const { t }         = useTranslation()
   const { pathname }  = useLocation()
   const navigate      = useNavigate()
 
   return (
-    <motion.nav
-      initial={{ y: 80, opacity: 0 }}
-      animate={{ y: 0,  opacity: 1 }}
-      transition={{ delay: 0.5, type: 'spring', stiffness: 300, damping: 25 }}
+    <nav
+      aria-label={t('nav.ariaLabel', { defaultValue: 'Main navigation' })}
       className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-safe-bottom"
     >
       <div className="glass-card rounded-2xl px-2 py-2 flex items-center justify-around max-w-lg mx-auto mb-2">
@@ -32,6 +40,7 @@ export default function BottomNav() {
           return (
             <motion.button
               key={key}
+              type="button"
               onClick={() => navigate(path)}
               whileTap={{ scale: 0.88 }}
               className={[
@@ -59,6 +68,6 @@ export default function BottomNav() {
           )
         })}
       </div>
-    </motion.nav>
+    </nav>
   )
 }

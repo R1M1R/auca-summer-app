@@ -11,7 +11,6 @@ import {
 import { useApp } from '@/contexts/AppContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAppStore } from '@/store/useAppStore'
-import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import { fadeUpLight } from '@/lib/motion'
 import NotificationsSettings from '@/components/settings/NotificationsSettings'
@@ -278,8 +277,6 @@ export default function SettingsPage() {
           </motion.div>
         )}
       </motion.main>
-
-      <BottomNav />
     </div>
   )
 }

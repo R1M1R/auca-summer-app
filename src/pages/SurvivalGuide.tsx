@@ -12,7 +12,6 @@ import { useUI }   from '@/contexts/UIContext'
 import AccordionPanel, {
   StepList, TipBox, CredentialBox, PriceRow, PhraseRow, InfoRow,
 } from '@/components/survival/AccordionPanel'
-import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
@@ -535,8 +534,6 @@ export default function SurvivalGuide() {
           </AccordionPanel>
         </motion.div>
       </motion.main>
-
-      <BottomNav />
     </div>
   )
 }

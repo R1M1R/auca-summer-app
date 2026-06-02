@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ArrowLeft, Globe2 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
-import BottomNav   from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 
 /* ── Types ───────────────────────────────────────────────────── */
@@ -341,8 +340,6 @@ export default function CultureTips() {
           <CultureCard key={card.id} card={card} />
         ))}
       </motion.main>
-
-      <BottomNav />
     </div>
   )
 }

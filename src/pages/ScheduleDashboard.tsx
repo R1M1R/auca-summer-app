@@ -13,7 +13,6 @@ import { isConfigured } from '@/lib/firebase'
 import WeekCalendar, { sameDay } from '@/components/schedule/WeekCalendar'
 import EventCard from '@/components/schedule/EventCard'
 import AddEventModal from '@/components/schedule/AddEventModal'
-import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { SkeletonTimeline } from '@/components/ui/Skeleton'
@@ -266,8 +265,6 @@ export default function ScheduleDashboard() {
         defaultDate={selectedDate}
         mode={modalMode}
       />
-
-      <BottomNav />
     </div>
   )
 }

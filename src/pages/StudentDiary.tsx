@@ -9,7 +9,6 @@ import { useApp }   from '@/contexts/AppContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import PreferencesTab   from '@/components/diary/PreferencesTab'
 import ImpressionsTab   from '@/components/diary/ImpressionsTab'
-import BottomNav        from '@/components/BottomNav'
 import ThemeToggle      from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
@@ -124,8 +123,6 @@ export default function StudentDiary() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      <BottomNav />
     </div>
   )
 }

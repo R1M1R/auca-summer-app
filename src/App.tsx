@@ -13,6 +13,7 @@ import UsefulToolsPanel from '@/components/widgets/UsefulToolsPanel'
 import InstallPWA from '@/components/install/InstallPWA'
 import NotificationBridge from '@/components/notifications/NotificationBridge'
 import StudentPresenceReporter from '@/components/presence/StudentPresenceReporter'
+import BottomNav, { shouldShowBottomNav } from '@/components/BottomNav'
 
 const WelcomeScreen     = lazy(() => import('@/pages/WelcomeScreen'))
 const Dashboard         = lazy(() => import('@/pages/Dashboard'))
@@ -54,7 +55,9 @@ function GlobalWidgets() {
 
 export default function App() {
   const location = useLocation()
+  const { role } = useApp()
   useRoleLanguage()
+  const showBottomNav = shouldShowBottomNav(location.pathname, !!role)
 
   return (
     <>
@@ -103,6 +106,7 @@ export default function App() {
       </motion.div>
 
       <GlobalWidgets />
+      {showBottomNav && <BottomNav />}
       <InstallPWA />
     </>
   )
