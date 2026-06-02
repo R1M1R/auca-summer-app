@@ -21,11 +21,10 @@ export async function buildEventRussianFields(input: {
       : Promise.resolve(undefined),
   ])
 
-  return {
-    title_ru,
-    description_ru: description_ru || undefined,
-    location_ru:    location_ru || undefined,
-  }
+  const out: EventBilingualRu = { title_ru }
+  if (description_ru) out.description_ru = description_ru
+  if (location_ru) out.location_ru = location_ru
+  return out
 }
 
 export interface PreferencesBilingualRu {
@@ -61,14 +60,15 @@ export async function buildPreferencesRussianFields(input: {
     input.dietaryNotes.trim() ? translateText(input.dietaryNotes, 'ru') : Promise.resolve(''),
   ])
 
-  return {
+  const out: PreferencesBilingualRu = {
     allergies_ru,
     favoriteFoods_ru,
     favoriteDrinks_ru,
     dislikes_ru,
-    wishes_ru:       wishes_ru || undefined,
-    dietaryNotes_ru: dietaryNotes_ru || undefined,
   }
+  if (wishes_ru) out.wishes_ru = wishes_ru
+  if (dietaryNotes_ru) out.dietaryNotes_ru = dietaryNotes_ru
+  return out
 }
 
 export interface DiaryBilingual {

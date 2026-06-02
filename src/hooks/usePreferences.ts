@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, isConfigured } from '@/lib/firebase'
 import { buildPreferencesRussianFields } from '@/lib/dualSave'
+import { sanitizeFirestoreData } from '@/lib/firestoreSanitize'
 import {
   DEMO_PREFERENCES_KEY,
   notifyDemoUpdate,
@@ -114,7 +115,7 @@ export function usePreferences() {
         return
       }
 
-      await setDoc(doc(db, COLL, DOC), payload, { merge: true })
+      await setDoc(doc(db, COLL, DOC), sanitizeFirestoreData(payload), { merge: true })
       setLastSaved(new Date())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')

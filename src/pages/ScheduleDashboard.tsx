@@ -7,6 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useAppStore } from '@/store/useAppStore'
 import { useEvents, useEventMutations } from '@/hooks/useEvents'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
+import { getUserFacingError } from '@/lib/userFacingError'
 import { useStudentPlanNotifications } from '@/hooks/useStudentPlanNotifications'
 import { isConfigured } from '@/lib/firebase'
 import WeekCalendar, { sameDay } from '@/components/schedule/WeekCalendar'
@@ -193,7 +194,9 @@ export default function ScheduleDashboard() {
 
         {!loading && error && (
           <div className="mx-4 mt-4 glass-card px-4 py-3 border border-rose-200 dark:border-rose-900/50">
-            <p className="text-sm text-rose-500">{t('schedule.eventsLoadError', { error })}</p>
+            <p className="text-sm text-rose-500">
+              {t('schedule.eventsLoadError', { error: getUserFacingError(new Error(error), t) })}
+            </p>
           </div>
         )}
 

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useEventMutations } from '@/hooks/useEvents'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
+import { getUserFacingError } from '@/lib/userFacingError'
 import type { AppEvent, EventCategory } from '@/types'
 
 const HOST_CATEGORIES: { value: EventCategory; color: string; Icon: React.ElementType }[] = [
@@ -180,7 +181,7 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
       }
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('schedule.modal.saveError'))
+      setError(getUserFacingError(err, t))
     } finally {
       setSubmitting(false)
     }

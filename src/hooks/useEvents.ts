@@ -17,6 +17,7 @@ import {
   canToggleEventComplete,
 } from '@/lib/eventPermissions'
 import { buildEventRussianFields } from '@/lib/dualSave'
+import { sanitizeFirestoreData } from '@/lib/firestoreSanitize'
 import {
   loadDemoEvents,
   saveDemoEvents,
@@ -80,9 +81,9 @@ export function useEventMutations() {
           location:    payload.location,
         })
 
-        const docData = {
+        const docData = sanitizeFirestoreData({
           title:           payload.title,
-          description:     payload.description,
+          description:     payload.description ?? '',
           ...ruFields,
           date:            Timestamp.fromDate(payload.date),
           hasExactTime:    true,
@@ -90,9 +91,9 @@ export function useEventMutations() {
           createdBy:       uid,
           isEditable:      true,
           completed:       false,
-          ...(payload.duration !== undefined && { duration: payload.duration }),
-          ...(payload.location !== undefined && { location: payload.location }),
-        }
+          duration:        payload.duration,
+          location:        payload.location,
+        })
 
         if (!isConfigured) {
           const list = loadDemoEvents()
@@ -142,19 +143,22 @@ export function useEventMutations() {
         return
       }
 
-      await addDoc(collection(db, EVENTS_COLLECTION), {
-        title:       payload.title,
-        description: payload.description,
-        date:        Timestamp.fromDate(payload.date),
-        ...(payload.duration !== undefined && { duration: payload.duration }),
-        ...(payload.location !== undefined && { location: payload.location }),
-        category:    payload.category,
-        createdBy:   ADMIN_CREATOR,
-        isEditable:  false,
-        completed:   false,
-        createdAt:   serverTimestamp(),
-        updatedAt:   serverTimestamp(),
-      })
+      await addDoc(
+        collection(db, EVENTS_COLLECTION),
+        sanitizeFirestoreData({
+          title:       payload.title,
+          description: payload.description ?? '',
+          date:        Timestamp.fromDate(payload.date),
+          duration:    payload.duration,
+          location:    payload.location,
+          category:    payload.category,
+          createdBy:   ADMIN_CREATOR,
+          isEditable:  false,
+          completed:   false,
+          createdAt:   serverTimestamp(),
+          updatedAt:   serverTimestamp(),
+        }),
+      )
     },
     [role, canFamilyMutate, ensureUserId],
   )
@@ -194,8 +198,14 @@ export function useEventMutations() {
         throw new Error('Event context required for student update')
       }
 
-      const data: Record<string, unknown> = { ...payload, updatedAt: serverTimestamp() }
+      const data: Record<string, unknown> = { updatedAt: serverTimestamp() }
+      if (payload.title !== undefined) data.title = payload.title
+      if (payload.description !== undefined) data.description = payload.description
       if (payload.date) data.date = Timestamp.fromDate(payload.date)
+      if (payload.duration !== undefined) data.duration = payload.duration
+      if (payload.location !== undefined) data.location = payload.location
+      if (payload.completed !== undefined) data.completed = payload.completed
+
       if (role === 'student') {
         data.category = 'student_personal'
         const ruFields = await buildEventRussianFields({
@@ -206,7 +216,7 @@ export function useEventMutations() {
         Object.assign(data, ruFields)
       }
 
-      await updateDoc(doc(db, EVENTS_COLLECTION, id), data)
+      await updateDoc(doc(db, EVENTS_COLLECTION, id), sanitizeFirestoreData(data))
     },
     [canFamilyMutate, role, assertCanEdit],
   )

@@ -33,6 +33,7 @@ import { isWithinNextDays } from '@/lib/eventWindow'
 import { hasSeenWelcomeModal } from '@/lib/welcomeStorage'
 import WelcomeModal from '@/components/welcome/WelcomeModal'
 import { SkeletonEventList } from '@/components/ui/Skeleton'
+import { getUserFacingError } from '@/lib/userFacingError'
 
 const BEFORE_MEETING = Date.now() < MEETING_DATE.getTime()
 
@@ -482,7 +483,9 @@ export default function Dashboard() {
           {/* Error state */}
           {error && !loading && (
             <div className="glass-card px-4 py-3 border border-rose-200 dark:border-rose-900/50">
-              <p className="text-sm text-rose-500">{t('dashboard.eventsLoadError', { error })}</p>
+              <p className="text-sm text-rose-500">
+                {t('dashboard.eventsLoadError', { error: getUserFacingError(new Error(error), t) })}
+              </p>
             </div>
           )}
 
