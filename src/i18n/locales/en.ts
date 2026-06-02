@@ -178,6 +178,31 @@ const en = {
         'Enable notifications in browser settings to get reminders and alerts.',
       familyNewEventBody:
         'New plan: {{title}} · {{time}} / Новый план: {{title}} · {{time}}',
+      settings: {
+        sectionTitle:  'Notifications',
+        title:         'Push notifications',
+        hintStudent:
+          'Reminders ~30 min before today’s events with an exact time. Keep the app allowed in browser settings.',
+        hintFamily:
+          'Alerts when the student adds a diary entry or a new plan (while this app tab is open).',
+        unsupported:
+          'Your browser does not support notifications.',
+        enableButton:  'Enable notifications',
+        retryButton:   'Try again',
+        deniedHelp:
+          'Notifications are blocked. Click the lock icon in the address bar → Site settings → Notifications → Allow, then tap “Try again”.',
+        deniedToast:   'Notifications blocked. Allow them in browser site settings.',
+        enabledToast:  'Notifications enabled',
+        grantedHint:   'Notifications are on. Use the test button to verify.',
+        testButton:    'Send test notification',
+        testTitle:     'TimeFlow test',
+        testBody:      'Notifications work! / Уведомления работают!',
+        testSent:      'Test notification sent',
+        testFailed:    'Could not show notification — check browser permissions.',
+        statusGranted: 'On',
+        statusDenied:  'Blocked',
+        statusDefault: 'Not set',
+      },
     },
     settings: {
       title:              'Settings',

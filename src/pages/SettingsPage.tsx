@@ -14,6 +14,7 @@ import { useAppStore } from '@/store/useAppStore'
 import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import { fadeUpLight } from '@/lib/motion'
+import NotificationsSettings from '@/components/settings/NotificationsSettings'
 
 const DataImporter = lazy(() => import('@/components/admin/DataImporter'))
 
@@ -186,6 +187,8 @@ export default function SettingsPage() {
             </Row>
           )}
         </Section>
+
+        <NotificationsSettings />
 
         <Section title={t('settings.account')}>
           <Row

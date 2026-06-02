@@ -60,14 +60,14 @@ export function useEventReminders(): void {
     if (role !== 'student') return
 
     checkReminders()
-    const id = window.setInterval(checkReminders, REMINDER_CHECK_MS)
 
+    const intervalId = window.setInterval(checkReminders, REMINDER_CHECK_MS)
     const unsubAdds = subscribeEventsAdds(() => {
       runReminderPass(useEventsStore.getState().events)
     })
 
     return () => {
-      window.clearInterval(id)
+      window.clearInterval(intervalId)
       unsubAdds()
     }
   }, [role, checkReminders])
