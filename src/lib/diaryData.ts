@@ -3,11 +3,16 @@ import { DEMO_DIARY_KEY, notifyDemoUpdate, subscribeDemoStorage } from '@/lib/de
 
 export const DIARY_COLLECTION = 'diary_entries'
 
-export function parseDiaryEntry(id: string, raw: FirestoreDiaryEntry): DiaryEntry {
+export function parseDiaryEntry(id: string, raw: FirestoreDiaryEntry): DiaryEntry | null {
+  if (!raw?.date?.toDate || !raw.mood) return null
+
+  const entryDate = raw.date.toDate()
+  if (Number.isNaN(entryDate.getTime())) return null
+
   return {
     id,
-    date:      raw.date?.toDate      ? raw.date.toDate()      : new Date(),
-    text:      raw.text,
+    date:      entryDate,
+    text:      raw.text?.trim() || '',
     textRu:    raw.text_ru,
     mood:      raw.mood,
     createdAt: raw.createdAt?.toDate ? raw.createdAt.toDate() : null,

@@ -66,7 +66,9 @@ export function startDiarySync(): () => void {
     q,
     (snap) => {
       setEntries(
-        snap.docs.map((d) => parseDiaryEntry(d.id, d.data() as FirestoreDiaryEntry)),
+        snap.docs
+          .map((d) => parseDiaryEntry(d.id, d.data() as FirestoreDiaryEntry))
+          .filter((e): e is DiaryEntry => e !== null),
       )
       setLoading(false)
       setError(null)

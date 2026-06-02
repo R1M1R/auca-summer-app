@@ -1,14 +1,16 @@
 import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { useApp }          from '@/contexts/AppContext'
+import { motion } from 'framer-motion'
+import { useApp } from '@/contexts/AppContext'
 import { useRoleLanguage } from '@/hooks/useRoleLanguage'
 import FirestoreSync from '@/components/FirestoreSync'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import PageLoader from '@/components/ui/PageLoader'
 import { routeTransition } from '@/lib/motion'
-import SOSModal            from '@/components/widgets/SOSModal'
-import SOSButton           from '@/components/widgets/SOSButton'
-import UsefulToolsPanel    from '@/components/widgets/UsefulToolsPanel'
-import InstallPWA          from '@/components/install/InstallPWA'
+import SOSModal from '@/components/widgets/SOSModal'
+import SOSButton from '@/components/widgets/SOSButton'
+import UsefulToolsPanel from '@/components/widgets/UsefulToolsPanel'
+import InstallPWA from '@/components/install/InstallPWA'
 
 const WelcomeScreen     = lazy(() => import('@/pages/WelcomeScreen'))
 const Dashboard         = lazy(() => import('@/pages/Dashboard'))
@@ -18,26 +20,22 @@ const CultureTips       = lazy(() => import('@/pages/CultureTips'))
 const SettingsPage      = lazy(() => import('@/pages/SettingsPage'))
 const StudentDiary      = lazy(() => import('@/pages/StudentDiary'))
 
-function Loader() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0f0f1a]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-[3px] border-primary-200 border-t-primary-500 rounded-full animate-spin" />
-        <p className="text-sm text-slate-400">Loading…</p>
-      </div>
-    </div>
-  )
-}
-
 function RequireRole({ children }: { children: React.ReactNode }) {
   const { role } = useApp()
   return role ? <>{children}</> : <Navigate to="/" replace />
 }
 
-/** Root: auto-redirect if session exists (device recognition) */
 function RootRoute() {
   const { role } = useApp()
   return role ? <Navigate to="/dashboard" replace /> : <WelcomeScreen />
+}
+
+function RouteShell({ children }: { children: React.ReactNode }) {
+  return (
+    <ErrorBoundary nested>
+      <Suspense fallback={<PageLoader />}>{children}</Suspense>
+    </ErrorBoundary>
+  )
 }
 
 function GlobalWidgets() {
@@ -59,47 +57,46 @@ export default function App() {
   return (
     <>
       <FirestoreSync />
-      <Suspense fallback={<Loader />}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            className="min-h-screen"
-            variants={routeTransition}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-          <Routes location={location}>
-            <Route path="/"         element={<RootRoute />} />
+      <motion.div
+        key={location.pathname}
+        className="page-shell min-h-screen"
+        variants={routeTransition}
+        initial="initial"
+        animate="animate"
+      >
+        <Routes location={location}>
+          <Route path="/" element={<RouteShell><RootRoute /></RouteShell>} />
 
-            <Route path="/dashboard"
-              element={<RequireRole><Dashboard /></RequireRole>}
-            />
-            <Route path="/schedule"
-              element={<RequireRole><ScheduleDashboard /></RequireRole>}
-            />
-            <Route path="/guide"
-              element={<RequireRole><SurvivalGuide /></RequireRole>}
-            />
-            <Route path="/culture"
-              element={<RequireRole><CultureTips /></RequireRole>}
-            />
-            <Route path="/settings"
-              element={<RequireRole><SettingsPage /></RequireRole>}
-            />
-            <Route path="/diary"
-              element={<RequireRole><StudentDiary /></RequireRole>}
-            />
+          <Route
+            path="/dashboard"
+            element={<RouteShell><RequireRole><Dashboard /></RequireRole></RouteShell>}
+          />
+          <Route
+            path="/schedule"
+            element={<RouteShell><RequireRole><ScheduleDashboard /></RequireRole></RouteShell>}
+          />
+          <Route
+            path="/guide"
+            element={<RouteShell><RequireRole><SurvivalGuide /></RequireRole></RouteShell>}
+          />
+          <Route
+            path="/culture"
+            element={<RouteShell><RequireRole><CultureTips /></RequireRole></RouteShell>}
+          />
+          <Route
+            path="/settings"
+            element={<RouteShell><RequireRole><SettingsPage /></RequireRole></RouteShell>}
+          />
+          <Route
+            path="/diary"
+            element={<RouteShell><RequireRole><StudentDiary /></RequireRole></RouteShell>}
+          />
 
-            {/* Legacy redirects */}
-            <Route path="/tasks"    element={<Navigate to="/diary"     replace />} />
-            <Route path="/progress" element={<Navigate to="/dashboard" replace />} />
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          </motion.div>
-        </AnimatePresence>
-      </Suspense>
+          <Route path="/tasks" element={<Navigate to="/diary" replace />} />
+          <Route path="/progress" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </motion.div>
 
       <GlobalWidgets />
       <InstallPWA />

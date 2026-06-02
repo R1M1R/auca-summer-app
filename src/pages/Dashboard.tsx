@@ -31,6 +31,7 @@ import { fadeUpLight } from '@/lib/motion'
 import { isWithinNextDays } from '@/lib/eventWindow'
 import { hasSeenWelcomeModal } from '@/lib/welcomeStorage'
 import WelcomeModal from '@/components/welcome/WelcomeModal'
+import { SkeletonEventList } from '@/components/ui/Skeleton'
 
 const BEFORE_MEETING = Date.now() < MEETING_DATE.getTime()
 
@@ -160,7 +161,7 @@ export default function Dashboard() {
     })
 
   return (
-    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
 
       {/* ── Sticky header ── */}
       <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
@@ -472,13 +473,7 @@ export default function Dashboard() {
           </div>
 
           {/* Loading skeleton */}
-          {loading && (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="glass-card h-16 animate-pulse" />
-              ))}
-            </div>
-          )}
+          {loading && <SkeletonEventList count={3} />}
 
           {/* Error state */}
           {error && !loading && (
@@ -505,7 +500,7 @@ export default function Dashboard() {
                   variants={scaleIn}
                   custom={i}
                   layout
-                  className="glass-card px-4 py-3 flex items-start gap-3 group"
+                  className="glass-card card-pad flex items-start gap-3 group"
                 >
                   {/* Checkbox */}
                   <motion.button

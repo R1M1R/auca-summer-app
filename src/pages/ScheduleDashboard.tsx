@@ -15,24 +15,8 @@ import AddEventModal from '@/components/schedule/AddEventModal'
 import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { SkeletonTimeline } from '@/components/ui/Skeleton'
 import type { AppEvent } from '@/types'
-
-function SkeletonTimeline() {
-  return (
-    <div className="space-y-4 mt-4 px-4">
-      {[120, 80, 100].map((w, i) => (
-        <div key={i} className="flex gap-3">
-          <div className="w-[52px] shrink-0 pt-3.5">
-            <div className="h-3 w-10 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
-          </div>
-          <div className="flex-1 glass-card rounded-2xl p-4 space-y-2 animate-pulse">
-            <div className={`h-3.5 bg-slate-200 dark:bg-slate-700 rounded`} style={{ width: `${w}px` }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 function EmptyDay({ canAdd }: { canAdd: boolean }) {
   const { t } = useTranslation()
@@ -119,7 +103,7 @@ export default function ScheduleDashboard() {
   const isToday = sameDay(selectedDate, now)
 
   return (
-    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
       <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">

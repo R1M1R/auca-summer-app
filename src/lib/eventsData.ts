@@ -7,15 +7,20 @@ import { buildEventsFromSchedule } from '@/lib/buildScheduleEvents'
 export const EVENTS_COLLECTION = 'events'
 export const DEMO_EVENTS_KEY = 'app_demo_events_v3'
 
-export function fromFirestore(id: string, raw: FirestoreEvent): AppEvent {
+export function fromFirestore(id: string, raw: FirestoreEvent): AppEvent | null {
+  if (!raw?.date?.toDate) return null
+
   const legacyHost = raw.createdBy === 'host'
+  const eventDate = raw.date.toDate()
+  if (Number.isNaN(eventDate.getTime())) return null
+
   return {
     id,
-    title:           raw.title,
+    title:           raw.title?.trim() || 'Untitled',
     titleRu:         raw.title_ru,
     description:     raw.description ?? '',
     descriptionRu:   raw.description_ru,
-    date:            raw.date.toDate(),
+    date:            eventDate,
     duration:        raw.duration,
     location:        raw.location,
     locationRu:      raw.location_ru,

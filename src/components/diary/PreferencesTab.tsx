@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { usePreferences } from '@/hooks/usePreferences'
 import ChipInput from '@/components/diary/ChipInput'
+import { SkeletonCard } from '@/components/ui/Skeleton'
 import { localizePreferences } from '@/lib/localizedContent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import type { StudentPreferences, UserRole } from '@/types'
@@ -91,8 +92,10 @@ export default function PreferencesTab({ role }: Props) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-7 h-7 text-primary-400 animate-spin" />
+      <div className="space-y-4">
+        <SkeletonCard lines={2} />
+        <SkeletonCard lines={3} />
+        <SkeletonCard lines={2} />
       </div>
     )
   }
@@ -119,7 +122,7 @@ export default function PreferencesTab({ role }: Props) {
       {readOnlyBanner}
 
       {CHIP_SECTIONS.map(({ key, label, placeholder, Icon, gradient, chipColor }) => (
-        <motion.div key={key} variants={fadeUp} className="glass-card p-4 space-y-3">
+        <motion.div key={key} variants={fadeUp} className="glass-card card-pad space-y-3">
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-sm shrink-0`}>
               <Icon className="w-4 h-4" strokeWidth={1.8} />
@@ -137,7 +140,7 @@ export default function PreferencesTab({ role }: Props) {
         </motion.div>
       ))}
 
-      <motion.div variants={fadeUp} className="glass-card p-4 space-y-3">
+      <motion.div variants={fadeUp} className="glass-card card-pad space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-sm">
             <MessageSquare className="w-4 h-4" strokeWidth={1.8} />
@@ -161,7 +164,7 @@ export default function PreferencesTab({ role }: Props) {
         )}
       </motion.div>
 
-      <motion.div variants={fadeUp} className="glass-card p-4 space-y-3">
+      <motion.div variants={fadeUp} className="glass-card card-pad space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white shadow-sm">
             <FileText className="w-4 h-4" strokeWidth={1.8} />

@@ -238,9 +238,9 @@ function CultureCard({ card }: { card: CultureCard }) {
         </div>
 
         {/* Intro (always visible) */}
-        <div className="px-4 pt-3 pb-2 space-y-1">
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{card.intro.en}</p>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">{card.intro.ru}</p>
+        <div className="px-5 pt-4 pb-3 space-y-1.5">
+          <p className="text-[15px] text-slate-800 dark:text-slate-200 leading-relaxed">{card.intro.en}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{card.intro.ru}</p>
         </div>
       </button>
 
@@ -282,7 +282,7 @@ export default function CultureTips() {
   const navigate    = useNavigate()
 
   return (
-    <div className={`min-h-screen pb-28 ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
       <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <motion.button

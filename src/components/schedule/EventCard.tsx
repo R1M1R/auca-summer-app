@@ -180,7 +180,7 @@ function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
           tabIndex={isStudent ? 0 : undefined}
           onClick={() => isStudent && setExpanded((v) => !v)}
           onKeyDown={(e) => isStudent && e.key === 'Enter' && setExpanded((v) => !v)}
-          className={`flex gap-3 p-3.5 ${isStudent ? 'cursor-pointer' : ''}`}
+          className={`flex gap-3 p-5 ${isStudent ? 'cursor-pointer' : ''}`}
         >
           <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white shrink-0 mt-0.5`}>
             <Icon className="w-5 h-5" strokeWidth={1.8} />
@@ -188,7 +188,7 @@ function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-2">
-              <p className={`text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-snug flex-1 ${display.completed ? 'line-through opacity-50' : ''}`}>
+              <p className={`text-base font-semibold text-slate-900 dark:text-slate-50 leading-snug flex-1 ${display.completed ? 'line-through opacity-50' : ''}`}>
                 {display.title}
               </p>
 

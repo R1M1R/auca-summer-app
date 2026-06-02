@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useDiaryEntries, useDiaryMutations, toDateKey } from '@/hooks/useDiaryEntries'
 import MoodSelector, { MoodBadge } from '@/components/diary/MoodSelector'
+import { SkeletonCard } from '@/components/ui/Skeleton'
 import { localizeDiaryEntry } from '@/lib/localizedContent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import type { DiaryEntry, MoodLevel, UserRole } from '@/types'
@@ -272,8 +273,9 @@ export default function ImpressionsTab({ role }: Props) {
       {isStudent && <EntryComposer existing={todayEntry} />}
 
       {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 text-primary-400 animate-spin" />
+        <div className="space-y-3">
+          <SkeletonCard lines={3} />
+          <SkeletonCard lines={2} />
         </div>
       )}
 

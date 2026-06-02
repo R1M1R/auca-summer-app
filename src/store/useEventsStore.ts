@@ -60,7 +60,11 @@ export function startEventsSync(): () => void {
   const unsubFirestore = onSnapshot(
     q,
     (snap) => {
-      setEvents(snap.docs.map((d) => fromFirestore(d.id, d.data() as FirestoreEvent)))
+      setEvents(
+        snap.docs
+          .map((d) => fromFirestore(d.id, d.data() as FirestoreEvent))
+          .filter((e): e is AppEvent => e !== null),
+      )
       setLoading(false)
       setError(null)
     },
