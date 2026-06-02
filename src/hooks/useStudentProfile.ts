@@ -3,10 +3,12 @@ import {
   doc, getDoc, setDoc, onSnapshot, serverTimestamp,
 } from 'firebase/firestore'
 import { db, isConfigured } from '@/lib/firebase'
+import { reportStudentPresence } from '@/lib/studentProfileWrite'
 
 export interface StudentProfile {
   name:      string
   lastSeen:  Date | null
+  isOnline:  boolean
   createdAt: Date | null
 }
 
@@ -35,6 +37,7 @@ export function useStudentProfile() {
           setProfile({
             name:      (d.name as string | undefined) ?? '',
             lastSeen:  d.lastSeen?.toDate  ? d.lastSeen.toDate()  : null,
+            isOnline:  d.isOnline === true,
             createdAt: d.createdAt?.toDate ? d.createdAt.toDate() : null,
           })
         } else {
@@ -66,6 +69,7 @@ export function useStudentProfile() {
       ref,
       {
         name,
+        isOnline:  true,
         lastSeen:  serverTimestamp(),
         ...(!snap.exists() && { createdAt: serverTimestamp() }),
       },
@@ -73,11 +77,10 @@ export function useStudentProfile() {
     )
   }, [])
 
-  /** Touch lastSeen — call on Dashboard mount for student */
-  const touchLastSeen = useCallback(async (): Promise<void> => {
-    if (!isConfigured) return
-    await setDoc(doc(db, COLL, DOC), { lastSeen: serverTimestamp() }, { merge: true })
-  }, [])
+  const reportPresence = useCallback(
+    (online: boolean) => reportStudentPresence(online),
+    [],
+  )
 
-  return { profile, loading, error, saveProfile, touchLastSeen }
+  return { profile, loading, error, saveProfile, reportPresence }
 }

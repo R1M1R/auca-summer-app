@@ -17,6 +17,7 @@ import { useLocalizedEvents } from '@/hooks/useLocalizedEvents'
 import { useStudentPlanNotifications } from '@/hooks/useStudentPlanNotifications'
 import { useStudentProfile } from '@/hooks/useStudentProfile'
 import { getStudentPresenceState } from '@/lib/studentPresence'
+import { usePresenceClock } from '@/hooks/usePresenceClock'
 import { isStudentPlanForFamily, canToggleEventComplete } from '@/lib/eventPermissions'
 import EventCompleteToggle from '@/components/schedule/EventCompleteToggle'
 import AddEventModal from '@/components/schedule/AddEventModal'
@@ -112,16 +113,15 @@ export default function Dashboard() {
   }, [role])
 
   /* For family: subscribe to live student profile */
-  const { profile: studentProfile, loading: profileLoading, touchLastSeen } = useStudentProfile()
+  const { profile: studentProfile, loading: profileLoading } = useStudentProfile()
+  const presenceNow = usePresenceClock(10_000)
 
-  /* Update streak + student lastSeen on mount */
   useEffect(() => {
     updateStreak()
     if (role === 'student') {
       ensureUserId()
-      touchLastSeen().catch(() => {})
     }
-  }, [updateStreak, role, touchLastSeen, ensureUserId])
+  }, [updateStreak, role, ensureUserId])
 
   /* Student name: Firestore for student; local cache only for student role */
   const studentName =
@@ -130,7 +130,9 @@ export default function Dashboard() {
       : (studentProfile?.name?.trim() || t('dashboard.studentFallback'))
 
   const familyPresence =
-    role === 'family' ? getStudentPresenceState(studentProfile) : null
+    role === 'family'
+      ? getStudentPresenceState(studentProfile, presenceNow)
+      : null
   const familyDisplayName =
     familyPresence === 'awaiting'
       ? t('dashboard.awaitingRegistration')
