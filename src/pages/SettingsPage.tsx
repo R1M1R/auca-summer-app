@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import {
   Settings, Sun, Moon, Monitor, Globe,
   UserCircle, LogOut, Database, GraduationCap, Home,
-  ChevronRight, Loader2,
+  ChevronRight, Loader2, User,
   type LucideIcon,
 } from 'lucide-react'
 import { useApp } from '@/contexts/AppContext'
@@ -15,6 +15,7 @@ import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import { fadeUpLight } from '@/lib/motion'
 import NotificationsSettings from '@/components/settings/NotificationsSettings'
+import AppInstallationSettings from '@/components/settings/AppInstallationSettings'
 
 const DataImporter = lazy(() => import('@/components/admin/DataImporter'))
 
@@ -241,9 +242,16 @@ export default function SettingsPage() {
           </motion.button>
         </Section>
 
-        <Section title={t('settings.about')}>
+        <AppInstallationSettings />
+
+        <Section title={t('settings.aboutApp')}>
           <Row icon={Settings} label={t('settings.version')} gradient="from-slate-400 to-slate-600">
             <span className="text-xs text-slate-400 font-mono">0.1.0</span>
+          </Row>
+          <Row icon={User} label={t('settings.author')} gradient="from-cyan-500 to-sky-600">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-right leading-snug">
+              {t('settings.authorName')}
+            </span>
           </Row>
           <Row icon={Database} label={t('settings.firestoreCollection')} gradient="from-violet-500 to-primary-600">
             <span className="text-xs text-slate-400 font-mono">events</span>
