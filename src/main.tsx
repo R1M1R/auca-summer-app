@@ -6,6 +6,7 @@ import '@/index.css'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AppProvider }  from '@/contexts/AppContext'
 import { UIProvider }   from '@/contexts/UIContext'
+import { ToastProvider } from '@/contexts/ToastContext'
 import App from '@/App'
 import ErrorBoundary from '@/components/ErrorBoundary'
 
@@ -26,7 +27,9 @@ createRoot(document.getElementById('root')!).render(
         <ThemeProvider>
           <AppProvider>
             <UIProvider>
-              <App />
+              <ToastProvider>
+                <App />
+              </ToastProvider>
             </UIProvider>
           </AppProvider>
         </ThemeProvider>

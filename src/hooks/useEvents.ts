@@ -14,6 +14,7 @@ import { useEventsStore } from '@/store/useEventsStore'
 import {
   canStudentEditEvent,
   canFamilyManageEvents,
+  canToggleEventComplete,
 } from '@/lib/eventPermissions'
 import { buildEventRussianFields } from '@/lib/dualSave'
 import {
@@ -229,6 +230,10 @@ export function useEventMutations() {
 
   const toggleComplete = useCallback(
     async (id: string, completed: boolean): Promise<void> => {
+      if (!canToggleEventComplete(role)) {
+        throw new Error('Only students can change completion status')
+      }
+
       if (!isConfigured) {
         const list = loadDemoEvents()
         const idx  = list.findIndex((e) => e.id === id)
@@ -244,7 +249,7 @@ export function useEventMutations() {
         updatedAt: serverTimestamp(),
       })
     },
-    [],
+    [role],
   )
 
   return {

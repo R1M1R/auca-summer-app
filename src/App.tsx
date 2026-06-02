@@ -11,6 +11,7 @@ import SOSModal from '@/components/widgets/SOSModal'
 import SOSButton from '@/components/widgets/SOSButton'
 import UsefulToolsPanel from '@/components/widgets/UsefulToolsPanel'
 import InstallPWA from '@/components/install/InstallPWA'
+import NotificationBridge from '@/components/notifications/NotificationBridge'
 
 const WelcomeScreen     = lazy(() => import('@/pages/WelcomeScreen'))
 const Dashboard         = lazy(() => import('@/pages/Dashboard'))
@@ -57,6 +58,7 @@ export default function App() {
   return (
     <>
       <FirestoreSync />
+      <NotificationBridge />
       <motion.div
         key={location.pathname}
         className="page-shell min-h-screen"

@@ -6,7 +6,8 @@ import {
   ChevronDown, Pencil, Trash2, Clock, MapPin,
   CheckCircle2, Circle, AlertTriangle, BookUser, ShieldAlert,
 } from 'lucide-react'
-import { showEditDeleteOnCard, isStudentPlanForFamily } from '@/lib/eventPermissions'
+import { showEditDeleteOnCard, isStudentPlanForFamily, canToggleEventComplete } from '@/lib/eventPermissions'
+import EventCompleteToggle from '@/components/schedule/EventCompleteToggle'
 import { useDisplayEvent } from '@/hooks/useDisplayEvent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import type { AppEvent, EventCategory, UserRole } from '@/types'
@@ -87,11 +88,12 @@ const CAT: Record<EventCategory, CatConfig> = {
 }
 
 interface Props {
-  event:        AppEvent
-  role:         UserRole
-  userId:       string
-  onEditById:   (id: string) => void
-  onDeleteById: (id: string) => void
+  event:              AppEvent
+  role:               UserRole
+  userId:             string
+  onEditById:         (id: string) => void
+  onDeleteById:       (id: string) => void
+  onToggleComplete?: (id: string, completed: boolean) => void
 }
 
 function eventCardPropsEqual(prev: Props, next: Props): boolean {
@@ -107,11 +109,12 @@ function eventCardPropsEqual(prev: Props, next: Props): boolean {
     prev.role === next.role &&
     prev.userId === next.userId &&
     prev.onEditById === next.onEditById &&
-    prev.onDeleteById === next.onDeleteById
+    prev.onDeleteById === next.onDeleteById &&
+    prev.onToggleComplete === next.onToggleComplete
   )
 }
 
-function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
+function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComplete }: Props) {
   const { t } = useTranslation()
   const lang  = useAppLanguage()
   const display = useDisplayEvent(event)
@@ -147,8 +150,9 @@ function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
     ? timeLabel(new Date(display.date.getTime() + display.duration * 60_000))
     : null
 
-  const isStudent = role === 'student'
-  const isFamily  = role === 'family'
+  const isStudent       = role === 'student'
+  const isFamily        = role === 'family'
+  const canToggleDone   = canToggleEventComplete(role)
   const isStudentPlan = isStudentPlanForFamily(display)
   const { canEdit, canDelete } = showEditDeleteOnCard(event, role, userId)
 
@@ -182,6 +186,26 @@ function EventCard({ event, role, userId, onEditById, onDeleteById }: Props) {
           onKeyDown={(e) => isStudent && e.key === 'Enter' && setExpanded((v) => !v)}
           className={`flex gap-3 p-5 ${isStudent ? 'cursor-pointer' : ''}`}
         >
+          <EventCompleteToggle
+            completed={display.completed}
+            canToggle={canToggleDone}
+            onToggle={
+              canToggleDone && onToggleComplete
+                ? () => onToggleComplete(event.id, display.completed)
+                : undefined
+            }
+            ariaLabel={
+              display.completed
+                ? t('eventCard.markIncomplete', { title: display.title })
+                : t('eventCard.markComplete', { title: display.title })
+            }
+            ariaLabelReadOnly={
+              display.completed
+                ? t('eventCard.completedReadOnly', { title: display.title })
+                : t('eventCard.pendingReadOnly', { title: display.title })
+            }
+          />
+
           <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white shrink-0 mt-0.5`}>
             <Icon className="w-5 h-5" strokeWidth={1.8} />
           </div>

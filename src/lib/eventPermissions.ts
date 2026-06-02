@@ -34,6 +34,11 @@ export function canFamilyManageEvents(role: UserRole): boolean {
   return role === 'family'
 }
 
+/** Only students may mark events completed / incomplete */
+export function canToggleEventComplete(role: UserRole): boolean {
+  return role === 'student'
+}
+
 /** @deprecated use canFamilyManageEvents */
 export const canHostManageEvents = canFamilyManageEvents
 

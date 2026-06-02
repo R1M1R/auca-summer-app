@@ -52,7 +52,7 @@ export default function ScheduleDashboard() {
 
   const { events: rawEvents, loading, error } = useEvents()
   const lang = useAppLanguage()
-  const { deleteEvent, canFamilyMutate, canAddStudentPlan } = useEventMutations()
+  const { deleteEvent, toggleComplete, canFamilyMutate, canAddStudentPlan } = useEventMutations()
   const { hasNew, count, markSeen } = useStudentPlanNotifications(rawEvents)
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -77,6 +77,13 @@ export default function ScheduleDashboard() {
 
   const openAdd  = () => { setEditingEvent(null); setShowModal(true) }
   const closeModal = () => { setShowModal(false); setEditingEvent(null) }
+
+  const handleToggleComplete = useCallback(
+    async (id: string, completed: boolean) => {
+      await toggleComplete(id, !completed)
+    },
+    [toggleComplete],
+  )
 
   const handleEditById = useCallback(
     (id: string) => {
@@ -209,6 +216,7 @@ export default function ScheduleDashboard() {
                 userId={effectiveUserId}
                 onEditById={handleEditById}
                 onDeleteById={handleDeleteById}
+                onToggleComplete={handleToggleComplete}
               />
             ))}
 

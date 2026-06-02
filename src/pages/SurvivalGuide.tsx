@@ -16,6 +16,8 @@ import BottomNav from '@/components/BottomNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
+import { GIS_HOME_URL, GIS_AUCA_URL } from '@/lib/guideAddresses'
+import GuideAddressLink from '@/components/guide/GuideAddressLink'
 
 type PhraseItem   = { phrase: string; phonetic: string; translation: string }
 type PriceItem    = { item: string; price: string }
@@ -138,7 +140,9 @@ export default function SurvivalGuide() {
                   </p>
                 </div>
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                  {t('guide.twogis.homeAddress')}
+                  <GuideAddressLink href={GIS_HOME_URL}>
+                    {t('guide.twogis.homeAddress')}
+                  </GuideAddressLink>
                 </p>
               </div>
               <div className="glass-card px-3 py-2.5 border-emerald-200/50 dark:border-emerald-800/30">
@@ -149,7 +153,9 @@ export default function SurvivalGuide() {
                   </p>
                 </div>
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                  {t('guide.twogis.aucaAddress')}
+                  <GuideAddressLink href={GIS_AUCA_URL}>
+                    {t('guide.twogis.aucaAddress')}
+                  </GuideAddressLink>
                 </p>
               </div>
             </div>
@@ -246,7 +252,9 @@ export default function SurvivalGuide() {
                       {t('guide.sections.transport.startLabel')}
                     </p>
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {t('guide.sections.transport.startAddress')}
+                      <GuideAddressLink href={GIS_HOME_URL} className="text-sm font-semibold">
+                        {t('guide.sections.transport.startAddress')}
+                      </GuideAddressLink>
                     </p>
                   </div>
                   <div>
@@ -254,7 +262,9 @@ export default function SurvivalGuide() {
                       {t('guide.sections.transport.destLabel')}
                     </p>
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {t('guide.sections.transport.destAddress')}
+                      <GuideAddressLink href={GIS_AUCA_URL} className="text-sm font-semibold">
+                        {t('guide.sections.transport.destAddress')}
+                      </GuideAddressLink>
                     </p>
                   </div>
                 </div>

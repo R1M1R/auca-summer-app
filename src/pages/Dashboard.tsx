@@ -17,7 +17,8 @@ import { useLocalizedEvents } from '@/hooks/useLocalizedEvents'
 import { useStudentPlanNotifications } from '@/hooks/useStudentPlanNotifications'
 import { useStudentProfile } from '@/hooks/useStudentProfile'
 import { getStudentPresenceState } from '@/lib/studentPresence'
-import { isStudentPlanForFamily } from '@/lib/eventPermissions'
+import { isStudentPlanForFamily, canToggleEventComplete } from '@/lib/eventPermissions'
+import EventCompleteToggle from '@/components/schedule/EventCompleteToggle'
 import AddEventModal from '@/components/schedule/AddEventModal'
 import { isConfigured } from '@/lib/firebase'
 import { MEETING_DATE } from '@/hooks/useCountdown'
@@ -149,7 +150,10 @@ export default function Dashboard() {
   const pendingEvents   = upcomingWindowEvents.filter((e) => !e.completed)
   const completedEvents = upcomingWindowEvents.filter((e) =>  e.completed)
 
+  const canToggleDone = canToggleEventComplete(role)
+
   const handleToggle = async (id: string, completed: boolean) => {
+    if (!canToggleDone) return
     await toggleComplete(id, !completed)
     if (!completed) incrementTasks()
   }
@@ -502,14 +506,12 @@ export default function Dashboard() {
                   layout
                   className="glass-card card-pad flex items-start gap-3 group"
                 >
-                  {/* Checkbox */}
-                  <motion.button
-                    whileTap={{ scale: 0.85 }}
-                    onClick={() => handleToggle(event.id, event.completed)}
-                    className="mt-0.5 w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600
-                               hover:border-primary-400 dark:hover:border-primary-400
-                               flex-shrink-0 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
-                    aria-label={t('dashboard.markDone', { title: event.title })}
+                  <EventCompleteToggle
+                    completed={event.completed}
+                    canToggle={canToggleDone}
+                    onToggle={() => handleToggle(event.id, event.completed)}
+                    ariaLabel={t('dashboard.markDone', { title: event.title })}
+                    ariaLabelReadOnly={t('dashboard.pendingReadOnly', { title: event.title })}
                   />
 
                   {/* Content */}
@@ -555,15 +557,14 @@ export default function Dashboard() {
                         layout
                         className="glass-card px-4 py-2.5 flex items-center gap-3 opacity-60"
                       >
-                        <motion.button
-                          whileTap={{ scale: 0.85 }}
-                          onClick={() => handleToggle(event.id, event.completed)}
-                          className="w-5 h-5 rounded-full bg-emerald-400 flex-shrink-0 flex items-center justify-center"
-                        >
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </motion.button>
+                        <EventCompleteToggle
+                          completed={event.completed}
+                          canToggle={canToggleDone}
+                          onToggle={() => handleToggle(event.id, event.completed)}
+                          ariaLabel={t('dashboard.markUndone', { title: event.title })}
+                          ariaLabelReadOnly={t('dashboard.doneReadOnly', { title: event.title })}
+                          className="mt-0"
+                        />
                         <p className="flex-1 text-sm text-slate-500 dark:text-slate-400 line-through truncate">
                           {event.title}
                         </p>

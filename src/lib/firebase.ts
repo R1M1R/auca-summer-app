@@ -1,5 +1,10 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
-import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  connectFirestoreEmulator,
+  type Firestore,
+} from 'firebase/firestore'
 import {
   readFirebaseEnv,
   isFirebaseEnvConfigured,
@@ -24,9 +29,15 @@ export function getFirebaseSetupIssues(): string[] {
 let app: FirebaseApp
 let db: Firestore
 
+/** IndexedDB cache — schedule & diary stay readable offline after first sync */
+export const offlinePersistenceEnabled = isConfigured
+
 if (isConfigured) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-  db  = getFirestore(app)
+
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache(),
+  })
 
   if (
     import.meta.env.DEV &&
@@ -35,6 +46,10 @@ if (isConfigured) {
   ) {
     connectFirestoreEmulator(db, 'localhost', 8080)
     console.info('[Firebase] Firestore emulator: localhost:8080')
+  }
+
+  if (import.meta.env.DEV) {
+    console.info('[Firebase] Firestore offline persistence enabled (IndexedDB)')
   }
 } else {
   const issues = getFirebaseConfigIssues(firebaseConfig)

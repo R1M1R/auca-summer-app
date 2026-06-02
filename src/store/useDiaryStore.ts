@@ -34,16 +34,39 @@ export const useDiaryStore = create<DiaryStore>((set) => ({
 }))
 
 let stopDiarySync: (() => void) | null = null
+let lastDiaryIds = new Set<string>()
+
+type DiaryAddListener = (added: DiaryEntry[]) => void
+const diaryAddListeners = new Set<DiaryAddListener>()
+
+/** Fired from Firestore onSnapshot when new diary documents appear */
+export function subscribeDiaryAdds(listener: DiaryAddListener): () => void {
+  diaryAddListeners.add(listener)
+  return () => diaryAddListeners.delete(listener)
+}
+
+function notifyDiaryAdds(added: DiaryEntry[]): void {
+  if (added.length === 0) return
+  diaryAddListeners.forEach((fn) => fn(added))
+}
+
+function applyDiaryEntries(entries: DiaryEntry[]): void {
+  const added = entries.filter((e) => !lastDiaryIds.has(e.id))
+  lastDiaryIds = new Set(entries.map((e) => e.id))
+  useDiaryStore.getState().setEntries(entries)
+  notifyDiaryAdds(added)
+}
 
 export function startDiarySync(): () => void {
   if (stopDiarySync) return stopDiarySync
 
-  const { setEntries, setLoading, setError } = useDiaryStore.getState()
+  const { setLoading, setError } = useDiaryStore.getState()
   setLoading(true)
 
   if (!isConfigured) {
     const refresh = () => {
-      setEntries(loadDemoDiary())
+      const entries = loadDemoDiary()
+      applyDiaryEntries(entries)
       setLoading(false)
       setError(null)
     }
@@ -51,6 +74,7 @@ export function startDiarySync(): () => void {
     const unsubDemo = subscribeDemoDiary(refresh)
     stopDiarySync = () => {
       unsubDemo()
+      lastDiaryIds = new Set()
       stopDiarySync = null
     }
     return stopDiarySync
@@ -65,11 +89,11 @@ export function startDiarySync(): () => void {
   const unsubFirestore = onSnapshot(
     q,
     (snap) => {
-      setEntries(
-        snap.docs
-          .map((d) => parseDiaryEntry(d.id, d.data() as FirestoreDiaryEntry))
-          .filter((e): e is DiaryEntry => e !== null),
-      )
+      const entries = snap.docs
+        .map((d) => parseDiaryEntry(d.id, d.data() as FirestoreDiaryEntry))
+        .filter((e): e is DiaryEntry => e !== null)
+
+      applyDiaryEntries(entries)
       setLoading(false)
       setError(null)
     },
@@ -82,6 +106,7 @@ export function startDiarySync(): () => void {
 
   stopDiarySync = () => {
     unsubFirestore()
+    lastDiaryIds = new Set()
     stopDiarySync = null
   }
   return stopDiarySync
@@ -89,4 +114,5 @@ export function startDiarySync(): () => void {
 
 export function stopDiarySyncIfRunning(): void {
   stopDiarySync?.()
+  lastDiaryIds = new Set()
 }
