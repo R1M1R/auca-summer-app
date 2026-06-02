@@ -173,6 +173,12 @@ const en = {
         delete:            'Delete',
       },
     },
+    notifications: {
+      permissionDeniedHint:
+        'Enable notifications in browser settings to get reminders and alerts.',
+      familyNewEventBody:
+        'New plan: {{title}} · {{time}} / Новый план: {{title}} · {{time}}',
+    },
     settings: {
       title:              'Settings',
       appearance:         'Appearance',

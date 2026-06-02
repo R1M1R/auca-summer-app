@@ -33,16 +33,38 @@ export const useEventsStore = create<EventsStore>((set) => ({
 }))
 
 let stopEventsSync: (() => void) | null = null
+let lastEventIds = new Set<string>()
+
+type EventsAddListener = (added: AppEvent[]) => void
+const eventsAddListeners = new Set<EventsAddListener>()
+
+/** Fired from Firestore/demo sync when new event documents appear */
+export function subscribeEventsAdds(listener: EventsAddListener): () => void {
+  eventsAddListeners.add(listener)
+  return () => eventsAddListeners.delete(listener)
+}
+
+function notifyEventsAdds(added: AppEvent[]): void {
+  if (added.length === 0) return
+  eventsAddListeners.forEach((fn) => fn(added))
+}
+
+function applyEvents(entries: AppEvent[]): void {
+  const added = entries.filter((e) => !lastEventIds.has(e.id))
+  lastEventIds = new Set(entries.map((e) => e.id))
+  useEventsStore.getState().setEvents(entries)
+  notifyEventsAdds(added)
+}
 
 export function startEventsSync(): () => void {
   if (stopEventsSync) return stopEventsSync
 
-  const { setEvents, setLoading, setError } = useEventsStore.getState()
+  const { setLoading, setError } = useEventsStore.getState()
   setLoading(true)
 
   if (!isConfigured) {
     const refresh = () => {
-      setEvents(loadDemoEvents())
+      applyEvents(loadDemoEvents())
       setLoading(false)
       setError(null)
     }
@@ -50,6 +72,7 @@ export function startEventsSync(): () => void {
     const unsubDemo = subscribeDemoEvents(refresh)
     stopEventsSync = () => {
       unsubDemo()
+      lastEventIds = new Set()
       stopEventsSync = null
     }
     return stopEventsSync
@@ -60,11 +83,11 @@ export function startEventsSync(): () => void {
   const unsubFirestore = onSnapshot(
     q,
     (snap) => {
-      setEvents(
-        snap.docs
-          .map((d) => fromFirestore(d.id, d.data() as FirestoreEvent))
-          .filter((e): e is AppEvent => e !== null),
-      )
+      const entries = snap.docs
+        .map((d) => fromFirestore(d.id, d.data() as FirestoreEvent))
+        .filter((e): e is AppEvent => e !== null)
+
+      applyEvents(entries)
       setLoading(false)
       setError(null)
     },
@@ -77,6 +100,7 @@ export function startEventsSync(): () => void {
 
   stopEventsSync = () => {
     unsubFirestore()
+    lastEventIds = new Set()
     stopEventsSync = null
   }
   return stopEventsSync
@@ -84,4 +108,5 @@ export function startEventsSync(): () => void {
 
 export function stopEventsSyncIfRunning(): void {
   stopEventsSync?.()
+  lastEventIds = new Set()
 }

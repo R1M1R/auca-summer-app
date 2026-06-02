@@ -18,8 +18,12 @@ export function useNotifications(): void {
 
     const timer = window.setTimeout(() => {
       sessionStorage.setItem(SESSION_ASK_KEY, '1')
-      void Notification.requestPermission().catch(() => {})
-    }, 2800)
+      void Notification.requestPermission().then((result) => {
+        if (import.meta.env.DEV) {
+          console.info('[notifications] permission:', result)
+        }
+      }).catch(() => {})
+    }, 1500)
 
     return () => window.clearTimeout(timer)
   }, [role])

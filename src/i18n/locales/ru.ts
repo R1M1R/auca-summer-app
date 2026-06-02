@@ -177,6 +177,12 @@ const ru = {
         delete:            'Удалить',
       },
     },
+    notifications: {
+      permissionDeniedHint:
+        'Включите уведомления в настройках браузера, чтобы получать напоминания.',
+      familyNewEventBody:
+        'Новый план: {{title}} · {{time}} / New plan: {{title}} · {{time}}',
+    },
     settings: {
       title:              'Настройки',
       appearance:         'Оформление',

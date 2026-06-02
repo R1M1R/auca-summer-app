@@ -1,61 +1,78 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useApp } from '@/contexts/AppContext'
-import { useEvents } from '@/hooks/useEvents'
-import { useLocalizedEvents } from '@/hooks/useLocalizedEvents'
-import { sameDay } from '@/components/schedule/WeekCalendar'
-import { eventHasExactTime } from '@/lib/eventTime'
-import { showBrowserNotification } from '@/lib/browserNotifications'
+import { useEventsStore, subscribeEventsAdds } from '@/store/useEventsStore'
+import { useToast } from '@/contexts/ToastContext'
+import { showBrowserNotification, notificationPermission } from '@/lib/browserNotifications'
 import { hasNotifiedEvent, markEventNotified } from '@/lib/notifiedEventsStorage'
+import {
+  shouldRemindEvent,
+  REMINDER_CHECK_MS,
+  REMINDER_TITLE,
+} from '@/lib/eventReminderLogic'
 import type { AppEvent } from '@/types'
 
-const CHECK_MS = 60_000
-const REMINDER_WINDOW_MIN = 30
+const PERM_HINT_KEY = 'timeflow_perm_denied_hint_shown'
 
-const NOTIFY_TITLE = 'Soon / Скоро'
+function runReminderPass(events: AppEvent[]): void {
+  const now = new Date()
 
-function minutesUntilStart(event: AppEvent, now: Date): number | null {
-  if (!eventHasExactTime(event)) return null
-  if (event.completed) return null
-  if (!sameDay(event.date, now)) return null
+  for (const event of events) {
+    if (!shouldRemindEvent(event, now)) continue
+    if (hasNotifiedEvent(event.id)) continue
 
-  const diffMs = event.date.getTime() - now.getTime()
-  if (diffMs <= 0) return null
-
-  return Math.floor(diffMs / 60_000)
-}
-
-function shouldRemind(event: AppEvent, now: Date): boolean {
-  const minutes = minutesUntilStart(event, now)
-  if (minutes === null) return false
-  return minutes <= REMINDER_WINDOW_MIN
+    markEventNotified(event.id)
+    void showBrowserNotification(REMINDER_TITLE, {
+      body: event.title,
+      tag:  `event-${event.id}`,
+      data: { eventId: event.id, type: 'event_reminder' },
+    })
+  }
 }
 
 export function useEventReminders(): void {
   const { role } = useApp()
-  const { events: rawEvents } = useEvents()
-  const events = useLocalizedEvents(rawEvents)
+  const events = useEventsStore((s) => s.events)
+  const { t } = useTranslation()
+  const { showToast } = useToast()
+  const hintedDenied = useRef(false)
+
+  const checkReminders = useCallback(() => {
+    if (role !== 'student') return
+
+    const list = useEventsStore.getState().events
+    runReminderPass(list)
+
+    if (
+      !hintedDenied.current &&
+      notificationPermission() === 'denied' &&
+      list.some((e) => shouldRemindEvent(e, new Date()) && !hasNotifiedEvent(e.id))
+    ) {
+      hintedDenied.current = true
+      if (!sessionStorage.getItem(PERM_HINT_KEY)) {
+        sessionStorage.setItem(PERM_HINT_KEY, '1')
+        showToast(t('notifications.permissionDeniedHint'))
+      }
+    }
+  }, [role, showToast, t])
 
   useEffect(() => {
     if (role !== 'student') return
 
-    const runCheck = () => {
-      const now = new Date()
+    checkReminders()
+    const id = window.setInterval(checkReminders, REMINDER_CHECK_MS)
 
-      for (const event of events) {
-        if (!shouldRemind(event, now)) continue
-        if (hasNotifiedEvent(event.id)) continue
+    const unsubAdds = subscribeEventsAdds(() => {
+      runReminderPass(useEventsStore.getState().events)
+    })
 
-        markEventNotified(event.id)
-        void showBrowserNotification(NOTIFY_TITLE, {
-          body: event.title,
-          tag:  `event-${event.id}`,
-          data: { eventId: event.id, type: 'event_reminder' },
-        })
-      }
+    return () => {
+      window.clearInterval(id)
+      unsubAdds()
     }
+  }, [role, checkReminders])
 
-    runCheck()
-    const id = window.setInterval(runCheck, CHECK_MS)
-    return () => window.clearInterval(id)
-  }, [role, events])
+  useEffect(() => {
+    if (role === 'student') checkReminders()
+  }, [role, events, checkReminders])
 }
