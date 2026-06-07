@@ -17,6 +17,8 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
 import { GIS_HOME_URL, GIS_AUCA_URL } from '@/lib/guideAddresses'
 import GuideAddressLink from '@/components/guide/GuideAddressLink'
+import AppHeader from '@/components/layout/AppHeader'
+import AppPage from '@/components/layout/AppPage'
 
 type PhraseItem   = { phrase: string; phonetic: string; translation: string }
 type PriceItem    = { item: string; price: string }
@@ -56,8 +58,8 @@ export default function SurvivalGuide() {
   const emergencies   = asArray<EmergencyItem>(t('guide.sections.health.emergencies', { returnObjects: true }))
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
-      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
+    <AppPage className={isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}>
+      <AppHeader>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-sm">
             <Shield className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -75,7 +77,7 @@ export default function SurvivalGuide() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </header>
+      </AppHeader>
 
       <motion.div variants={fadeUp} initial="initial" animate="animate" className="mx-4 mt-4">
         <div className="glass-card p-5 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-rose-500/10 border-amber-200/40 dark:border-amber-800/30">
@@ -170,7 +172,7 @@ export default function SurvivalGuide() {
         variants={stagger}
         initial="initial"
         animate="animate"
-        className="px-4 mt-4 space-y-3 max-w-lg mx-auto"
+        className="app-main !pt-4 space-y-3"
       >
         <motion.div variants={fadeUp}>
           <AccordionPanel
@@ -534,6 +536,6 @@ export default function SurvivalGuide() {
           </AccordionPanel>
         </motion.div>
       </motion.main>
-    </div>
+    </AppPage>
   )
 }

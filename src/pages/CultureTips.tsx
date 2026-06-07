@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ArrowLeft, Globe2 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import ThemeToggle from '@/components/ThemeToggle'
+import AppHeader from '@/components/layout/AppHeader'
+import AppPage from '@/components/layout/AppPage'
 
 /* ── Types ───────────────────────────────────────────────────── */
 interface BiText { en: string; ru: string }
@@ -212,7 +215,12 @@ function TipRow({ tip, index }: { tip: BiText; index: number }) {
 
 /* ── Individual card ─────────────────────────────────────────── */
 function CultureCard({ card }: { card: CultureCard }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const phraseLabel =
+    card.phrase.label === 'Remember'
+      ? t('cultureTips.remember')
+      : t('cultureTips.keyPhrase')
 
   return (
     <motion.div variants={cardEntry} layout className={`rounded-2xl border overflow-hidden ${card.accent}`}>
@@ -263,7 +271,7 @@ function CultureCard({ card }: { card: CultureCard }) {
             {/* Key phrase */}
             <div className={`mx-4 mb-4 mt-2 px-3 py-2.5 rounded-xl bg-gradient-to-r ${card.gradient}`}>
               <p className="text-[9px] font-bold text-white/70 uppercase tracking-widest mb-1">
-                {card.phrase.label}
+                {phraseLabel}
               </p>
               <p className="text-sm font-bold text-white">{card.phrase.en}</p>
               <p className="text-xs text-white/80 mt-0.5">{card.phrase.ru}</p>
@@ -277,12 +285,13 @@ function CultureCard({ card }: { card: CultureCard }) {
 
 /* ─────────────────────────────────────────────────────────────── */
 export default function CultureTips() {
+  const { t } = useTranslation()
   const { isDark }  = useTheme()
   const navigate    = useNavigate()
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
-      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
+    <AppPage className={isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}>
+      <AppHeader>
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.88 }}
@@ -295,12 +304,12 @@ export default function CultureTips() {
             <Globe2 className="w-5 h-5 text-white" strokeWidth={1.5} />
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Kyrgyzstan</p>
-            <p className="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Culture Tips</p>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{t('cultureTips.country')}</p>
+            <p className="text-[13px] font-bold text-slate-700 dark:text-slate-200 leading-tight">{t('cultureTips.title')}</p>
           </div>
         </div>
         <ThemeToggle />
-      </header>
+      </AppHeader>
 
       {/* ── Hero ── */}
       <motion.div
@@ -309,22 +318,20 @@ export default function CultureTips() {
         className="mx-4 mt-4 glass-card p-5 bg-gradient-to-br from-emerald-500/10 to-cyan-500/5 border-emerald-200/40 dark:border-emerald-800/30"
       >
         <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">
-          Know Before You Go 🌍
+          {t('cultureTips.heroTitle')}
         </h2>
         <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-          Tap any card to expand cultural tips. Each entry shows both
-          <strong className="text-slate-600 dark:text-slate-300"> English</strong> 🇬🇧 and
-          <strong className="text-slate-600 dark:text-slate-300"> Russian</strong> 🇷🇺 to help you communicate confidently.
+          {t('cultureTips.heroBody')}
         </p>
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <span className="badge bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-            8 topics
+            {t('cultureTips.badgeTopics')}
           </span>
           <span className="badge bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400">
-            Bilingual 🇬🇧 🇷🇺
+            {t('cultureTips.badgeBilingual')}
           </span>
           <span className="badge bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            Key phrases
+            {t('cultureTips.badgePhrases')}
           </span>
         </div>
       </motion.div>
@@ -334,12 +341,12 @@ export default function CultureTips() {
         variants={gridStagger}
         initial="initial"
         animate="animate"
-        className="px-4 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto pb-4"
+        className="app-main !pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl"
       >
         {CARDS.map((card) => (
           <CultureCard key={card.id} card={card} />
         ))}
       </motion.main>
-    </div>
+    </AppPage>
   )
 }

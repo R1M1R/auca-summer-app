@@ -28,8 +28,28 @@ const en = {
         incorrect:      'Incorrect PIN',
         notConfigured:  'PIN is not configured. Add VITE_FAMILY_PIN to .env.local',
       },
+      nameStep: {
+        back:         'Back',
+        title:        'What is your name?',
+        subtitle:     'Your name will be shared with your host family',
+        placeholder:  'Your first name…',
+        cta:          "Let's go!",
+        privacy:      'Your name is only shared with your host family and stored securely.',
+        validation: {
+          empty: 'Please enter your name',
+          short: 'Name must be at least 2 characters',
+          long:  'Name is too long',
+        },
+      },
+      installStep: {
+        title:    'Add to Home Screen',
+        subtitle: 'Get the full app experience',
+        howTo:    'How to install',
+        skip:     'Skip for now →',
+      },
     },
     nav: {
+      ariaLabel: 'Main navigation',
       dashboard: 'Dashboard',
       diary:     'Diary',
       schedule:  'Schedule',
@@ -77,6 +97,8 @@ const en = {
       sos:                'SOS',
       studentsPlanBadge:  "Student's Plan",
       eventsLoadError:    'Failed to load events: {{error}}',
+      profileLoadError:   'Could not load student profile: {{error}}',
+      toggleError:        'Could not update task status',
       markDone:           'Mark "{{title}}" as done',
       markUndone:         'Mark "{{title}}" as not done',
       doneReadOnly:       '"{{title}}" — completed (read-only for family)',
@@ -151,6 +173,7 @@ const en = {
         saved:           'Saved!',
         lastSaved:       'Last saved {{time}}',
         saveFailed:      'Save failed',
+        loadError:       'Could not load preferences: {{error}}',
       },
       impressions: {
         liveSync:          'Live sync — updates appear automatically',
@@ -176,15 +199,19 @@ const en = {
     notifications: {
       permissionDeniedHint:
         'Enable notifications in browser settings to get reminders and alerts.',
-      familyNewEventBody:
-        'New plan: {{title}} · {{time}} / Новый план: {{title}} · {{time}}',
+      reminderTitle:    'Coming up soon',
+      reminderBody:     '{{title}} starts in about 30 minutes',
+      diaryTitle:       'New diary entry',
+      diaryBody:        'The student added a new impression in the diary',
+      familyPlanTitle:  'New student plan',
+      familyNewEventBody: 'New plan: {{title}} · {{time}}',
       settings: {
         sectionTitle:  'Notifications',
         title:         'Push notifications',
         hintStudent:
-          'Reminders ~30 min before today’s events with an exact time. Keep the app allowed in browser settings.',
+          'Reminders ~30 min before today’s events with an exact time. Install the app and allow notifications — reminders work in the background via the service worker.',
         hintFamily:
-          'Alerts when the student adds a diary entry or a new plan (while this app tab is open).',
+          'Alerts when the student adds a diary entry or a new plan. Keep the app open or installed for real-time sync.',
         unsupported:
           'Your browser does not support notifications.',
         enableButton:  'Enable notifications',
@@ -196,7 +223,7 @@ const en = {
         grantedHint:   'Notifications are on. Use the test button to verify.',
         testButton:    'Send test notification',
         testTitle:     'TimeFlow test',
-        testBody:      'Notifications work! / Уведомления работают!',
+        testBody:      'Notifications are working!',
         testSent:      'Test notification sent',
         testFailed:    'Could not show notification — check browser permissions.',
         statusGranted: 'On',
@@ -353,6 +380,34 @@ const en = {
       markIncomplete:   'Mark "{{title}}" as not done',
       completedReadOnly: '"{{title}}" — completed (read-only)',
       pendingReadOnly:   '"{{title}}" — not done (student only)',
+    },
+    sos: {
+      title:            'SOS / Emergency',
+      subtitle:         'Tap to call or message',
+      emergencySection: 'Emergency services',
+      familySection:    'Host family — WhatsApp',
+      whatsapp:         'WhatsApp',
+      call:             'Call',
+      police:           'Police',
+      ambulance:        'Ambulance',
+      contacts: {
+        emir:   'Emir (Host)',
+        indira: 'Indira (Host)',
+        raisa:  'Raisa apa',
+      },
+    },
+    cultureTips: {
+      country:       'Kyrgyzstan',
+      title:         'Culture Tips',
+      heroTitle:     'Know Before You Go 🌍',
+      heroBody:        'Tap any card to expand cultural tips. Each entry shows both English 🇬🇧 and Russian 🇷🇺 to help you communicate confidently.',
+      badgeTopics:   '8 topics',
+      badgeBilingual:'Bilingual 🇬🇧 🇷🇺',
+      badgePhrases:  'Key phrases',
+      keyPhrase:     'Key phrase',
+      remember:      'Remember',
+      langEn:        'English',
+      langRu:        'Russian',
     },
     guide: {
       programLabel:  'Kyrgyzstan Program',

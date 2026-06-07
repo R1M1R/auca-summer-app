@@ -10,6 +10,8 @@ import { useTheme } from '@/contexts/ThemeContext'
 import PreferencesTab   from '@/components/diary/PreferencesTab'
 import ImpressionsTab   from '@/components/diary/ImpressionsTab'
 import ThemeToggle      from '@/components/ThemeToggle'
+import AppHeader from '@/components/layout/AppHeader'
+import AppPage from '@/components/layout/AppPage'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 type Tab = 'preferences' | 'impressions'
@@ -49,8 +51,8 @@ export default function StudentDiary() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
-      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
+    <AppPage className={isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}>
+      <AppHeader>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-primary-600 flex items-center justify-center shadow-sm">
             <BookHeart className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -79,9 +81,9 @@ export default function StudentDiary() {
           {!isFamily && <LanguageSwitcher compact />}
           <ThemeToggle />
         </div>
-      </header>
+      </AppHeader>
 
-      <div className="sticky top-[61px] z-20 mx-4 mt-3">
+      <div className="app-subheader-sticky mx-4 mt-3">
         <div className="glass-card p-1 flex gap-1 rounded-2xl">
           {TABS.map(({ id, label, Icon, gradient }) => {
             const active = tab === id
@@ -109,7 +111,7 @@ export default function StudentDiary() {
         </div>
       </div>
 
-      <div className="px-4 pt-4 max-w-lg mx-auto">
+      <div className="app-main !pt-4 !space-y-0">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={tab}
@@ -123,6 +125,6 @@ export default function StudentDiary() {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+    </AppPage>
   )
 }

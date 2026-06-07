@@ -5,8 +5,6 @@ import type { AppEvent } from '@/types'
 export const REMINDER_WINDOW_MIN = 30
 export const REMINDER_CHECK_MS = 30_000
 
-export const REMINDER_TITLE = 'Soon / Скоро'
-
 export function minutesUntilStart(event: AppEvent, now: Date): number | null {
   if (!eventHasExactTime(event)) return null
   if (event.completed) return null

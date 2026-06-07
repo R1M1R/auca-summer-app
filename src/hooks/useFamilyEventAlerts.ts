@@ -6,7 +6,6 @@ import { useToast } from '@/contexts/ToastContext'
 import { showBrowserNotification } from '@/lib/browserNotifications'
 import { isStudentPlanForFamily } from '@/lib/eventPermissions'
 import { formatEventTime } from '@/lib/eventReminderLogic'
-const NOTIFY_TITLE = 'Student plan / План студента'
 
 export function useFamilyEventAlerts(): void {
   const { role } = useApp()
@@ -32,12 +31,13 @@ export function useFamilyEventAlerts(): void {
         if (!isStudentPlanForFamily(event)) continue
 
         const timeStr = formatEventTime(event, locale)
+        const title = t('notifications.familyPlanTitle')
         const body = t('notifications.familyNewEventBody', {
           title: event.title,
           time:  timeStr,
         })
 
-        void showBrowserNotification(NOTIFY_TITLE, {
+        void showBrowserNotification(title, {
           body,
           tag:  `student-event-${event.id}`,
           data: { eventId: event.id, type: 'student_event' },

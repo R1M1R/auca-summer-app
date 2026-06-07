@@ -152,9 +152,9 @@ export default function WelcomeScreen() {
   }
 
   const validateName = (v: string) => {
-    if (!v.trim())          return 'Please enter your name'
-    if (v.trim().length < 2) return 'Name must be at least 2 characters'
-    if (v.trim().length > 40) return 'Name is too long'
+    if (!v.trim())            return t('welcome.nameStep.validation.empty')
+    if (v.trim().length < 2)  return t('welcome.nameStep.validation.short')
+    if (v.trim().length > 40) return t('welcome.nameStep.validation.long')
     return ''
   }
 
@@ -226,7 +226,7 @@ export default function WelcomeScreen() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }}
-        className="absolute top-4 right-4 z-20 flex items-center gap-2"
+        className="absolute welcome-top-controls z-20 flex items-center gap-2"
       >
         <LanguageSwitcher previewFamily={selectedRole === 'family'} />
         <ThemeToggle />
@@ -343,20 +343,19 @@ export default function WelcomeScreen() {
                   className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  Back
+                  {t('welcome.nameStep.back')}
                 </motion.button>
 
-                {/* Header */}
                 <div className="glass-card p-5 flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white shadow-sm shrink-0">
                     <User className="w-6 h-6" strokeWidth={1.8} />
                   </div>
                   <div>
                     <p className="text-base font-black text-slate-800 dark:text-slate-100">
-                      What is your name?
+                      {t('welcome.nameStep.title')}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                      Your name will be shared with your host family
+                      {t('welcome.nameStep.subtitle')}
                     </p>
                   </div>
                 </div>
@@ -373,7 +372,7 @@ export default function WelcomeScreen() {
                         if (nameError) setNameError(validateName(e.target.value))
                       }}
                       onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
-                      placeholder="Your first name…"
+                      placeholder={t('welcome.nameStep.placeholder')}
                       maxLength={40}
                       autoComplete="given-name"
                       className={`input-field pr-12 text-lg font-semibold transition-all ${
@@ -430,7 +429,7 @@ export default function WelcomeScreen() {
                     />
                   ) : (
                     <>
-                      Let's go
+                      {t('welcome.nameStep.cta')}
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}
@@ -438,7 +437,7 @@ export default function WelcomeScreen() {
 
                 {/* Privacy note */}
                 <p className="text-center text-[11px] text-slate-400 leading-relaxed">
-                  Your name is only shared with your host family and stored securely.
+                  {t('welcome.nameStep.privacy')}
                 </p>
               </motion.div>
             )}
@@ -456,10 +455,10 @@ export default function WelcomeScreen() {
                   </div>
                   <div>
                     <p className="text-base font-black text-slate-800 dark:text-slate-100">
-                      Add to Home Screen
+                      {t('welcome.installStep.title')}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Get the full app experience
+                      {t('welcome.installStep.subtitle')}
                     </p>
                   </div>
                 </div>
@@ -471,7 +470,7 @@ export default function WelcomeScreen() {
                   className="btn-primary w-full flex items-center justify-center gap-2 h-14 text-base"
                 >
                   <Smartphone className="w-5 h-5" />
-                  How to install
+                  {t('welcome.installStep.howTo')}
                 </motion.button>
 
                 <motion.button
@@ -479,7 +478,7 @@ export default function WelcomeScreen() {
                   whileTap={{ scale: 0.97 }}
                   className="w-full h-12 rounded-2xl text-sm font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
-                  Skip for now →
+                  {t('welcome.installStep.skip')}
                 </motion.button>
               </motion.div>
             )}

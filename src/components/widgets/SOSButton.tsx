@@ -12,7 +12,7 @@ export default function SOSButton() {
       whileHover={{ scale: 1.08 }}
       whileTap={{ scale: 0.92 }}
       onClick={openSOS}
-      className="fixed bottom-[88px] left-4 z-40 flex items-center gap-1.5 px-4 py-2.5 rounded-2xl
+      className="sos-fab fixed flex items-center gap-1.5 px-4 py-2.5 rounded-2xl
                  bg-gradient-to-r from-rose-500 to-red-600
                  text-white text-xs font-black tracking-widest uppercase
                  shadow-[0_0_20px_rgba(239,68,68,0.5)]

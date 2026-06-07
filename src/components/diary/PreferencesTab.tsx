@@ -23,7 +23,7 @@ interface Props { role: UserRole }
 export default function PreferencesTab({ role }: Props) {
   const { t, i18n } = useTranslation()
   const isFamily = role === 'family'
-  const { preferences: remote, loading, saving, lastSaved, savePreferences } = usePreferences()
+  const { preferences: remote, loading, saving, lastSaved, savePreferences, error: loadError } = usePreferences()
 
   const [draft,   setDraft]   = useState(remote)
   const [dirty,   setDirty]   = useState(false)
@@ -96,6 +96,14 @@ export default function PreferencesTab({ role }: Props) {
         <SkeletonCard lines={2} />
         <SkeletonCard lines={3} />
         <SkeletonCard lines={2} />
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="glass-card card-pad border border-rose-200 dark:border-rose-900/50">
+        <p className="text-sm text-rose-500">{t('diary.prefs.loadError', { error: loadError })}</p>
       </div>
     )
   }

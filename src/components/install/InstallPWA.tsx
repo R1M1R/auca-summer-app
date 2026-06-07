@@ -127,7 +127,7 @@ function NativeInstallBar({
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 80, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className="fixed inset-x-0 bottom-[72px] z-[65] max-w-lg mx-auto px-3 pointer-events-none"
+      className="install-banner-above-nav fixed inset-x-0 max-w-lg mx-auto px-3 pointer-events-none"
     >
       <div className="pointer-events-auto glass-card rounded-2xl px-4 py-3 flex items-center gap-3 border-emerald-200/50 dark:border-emerald-800/40 bg-gradient-to-r from-emerald-50/95 to-teal-50/95 dark:from-emerald-950/50 dark:to-teal-950/40">
         <AppIconBadge />
@@ -181,7 +181,7 @@ function AndroidHintBar({
       initial={{ y: 80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 80, opacity: 0 }}
-      className="fixed inset-x-0 bottom-[72px] z-[65] max-w-lg mx-auto px-3 pointer-events-none"
+      className="install-banner-above-nav fixed inset-x-0 max-w-lg mx-auto px-3 pointer-events-none"
     >
       <div className="pointer-events-auto glass-card rounded-2xl px-4 py-3 flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white shrink-0">

@@ -48,6 +48,9 @@ export function showEditDeleteOnCard(
   userId: string,
 ): { canEdit: boolean; canDelete: boolean } {
   if (role === 'family') {
+    if (isStudentPlanForFamily(event)) {
+      return { canEdit: false, canDelete: false }
+    }
     return { canEdit: true, canDelete: true }
   }
   if (role === 'student') {

@@ -12,6 +12,7 @@ import { useApp } from '@/contexts/AppContext'
 import { useAppStore } from '@/store/useAppStore'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useUI }   from '@/contexts/UIContext'
+import { useToast } from '@/contexts/ToastContext'
 import { useEvents, useEventMutations } from '@/hooks/useEvents'
 import { useLocalizedEvents } from '@/hooks/useLocalizedEvents'
 import { useStudentPlanNotifications } from '@/hooks/useStudentPlanNotifications'
@@ -29,7 +30,10 @@ import ProgramProgressBar from '@/components/ProgramProgressBar'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
+import AppHeader from '@/components/layout/AppHeader'
+import AppPage from '@/components/layout/AppPage'
 import { isWithinNextDays } from '@/lib/eventWindow'
+import { sameDay } from '@/components/schedule/WeekCalendar'
 import { hasSeenWelcomeModal } from '@/lib/welcomeStorage'
 import WelcomeModal from '@/components/welcome/WelcomeModal'
 import { SkeletonEventList } from '@/components/ui/Skeleton'
@@ -90,6 +94,7 @@ export default function Dashboard() {
   const { role }        = useApp()
   const { isDark }      = useTheme()
   const { openSOS }     = useUI()
+  const { showToast }   = useToast()
   const navigate        = useNavigate()
   const updateStreak    = useAppStore((s) => s.updateStreak)
   const tasksCompleted  = useAppStore((s) => s.tasksCompleted)
@@ -112,7 +117,7 @@ export default function Dashboard() {
   }, [role])
 
   /* For family: subscribe to live student profile */
-  const { profile: studentProfile, loading: profileLoading } = useStudentProfile()
+  const { profile: studentProfile, loading: profileLoading, error: profileError } = useStudentProfile()
   const presenceNow = usePresenceClock(10_000)
 
   useEffect(() => {
@@ -149,15 +154,24 @@ export default function Dashboard() {
     () => events.filter((e) => isWithinNextDays(e.date, 7)),
     [events],
   )
+  const today = useMemo(() => new Date(), [])
   const pendingEvents   = upcomingWindowEvents.filter((e) => !e.completed)
   const completedEvents = upcomingWindowEvents.filter((e) =>  e.completed)
+  const completedToday  = useMemo(
+    () => events.filter((e) => e.completed && sameDay(e.date, today)),
+    [events, today],
+  )
 
   const canToggleDone = canToggleEventComplete(role)
 
   const handleToggle = async (id: string, completed: boolean) => {
     if (!canToggleDone) return
-    await toggleComplete(id, !completed)
-    if (!completed) incrementTasks()
+    try {
+      await toggleComplete(id, !completed)
+      if (!completed) incrementTasks()
+    } catch (err) {
+      showToast(getUserFacingError(err, t))
+    }
   }
 
   /* ── Helper: event date label ── */
@@ -167,10 +181,9 @@ export default function Dashboard() {
     })
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
+    <AppPage className={isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}>
 
-      {/* ── Sticky header ── */}
-      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
+      <AppHeader>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center shadow-glow-sm">
             <Clock className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -202,14 +215,13 @@ export default function Dashboard() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </header>
+      </AppHeader>
 
-      {/* ── Main content ── */}
       <motion.main
         variants={container}
         initial="initial"
         animate="animate"
-        className="px-4 pt-5 space-y-5 max-w-lg mx-auto"
+        className="app-main"
       >
         {/* Greeting */}
         <motion.div variants={fadeUp}>
@@ -224,7 +236,14 @@ export default function Dashboard() {
           {role === 'family' && profileLoading && (
             <div className="mt-3 glass-card px-4 py-3 h-16 animate-pulse" />
           )}
-          {role === 'family' && !profileLoading && (
+          {role === 'family' && !profileLoading && profileError && (
+            <div className="mt-3 glass-card px-4 py-3 border border-rose-200 dark:border-rose-900/50">
+              <p className="text-sm text-rose-500">
+                {t('dashboard.profileLoadError', { error: getUserFacingError(new Error(profileError), t) })}
+              </p>
+            </div>
+          )}
+          {role === 'family' && !profileLoading && !profileError && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -342,7 +361,7 @@ export default function Dashboard() {
             },
             {
               icon:     <Calendar className="w-4 h-4" />,
-              value:    completedEvents.length,
+              value:    completedToday.length,
               label:    t('dashboard.doneToday'),
               gradient: 'from-orange-500 to-rose-500',
             },
@@ -427,7 +446,7 @@ export default function Dashboard() {
               icon={<Plus className="w-4 h-4" />}
               label={role === 'student' ? t('dashboard.myPlan') : t('dashboard.addTask')}
               gradient="from-fuchsia-500 to-violet-600"
-              onClick={role === 'student' ? () => setShowPlanModal(true) : undefined}
+              onClick={role === 'student' ? () => setShowPlanModal(true) : () => navigate('/schedule')}
             />
             <QuickAction
               icon={<Calendar className="w-4 h-4" />}
@@ -598,6 +617,6 @@ export default function Dashboard() {
       {role === 'student' && (
         <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       )}
-    </div>
+    </AppPage>
   )
 }

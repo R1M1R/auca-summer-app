@@ -66,7 +66,7 @@ export default function App() {
       <StudentPresenceReporter />
       <motion.div
         key={location.pathname}
-        className="page-shell min-h-screen"
+        className={`page-shell min-h-screen${showBottomNav ? ' page-shell--with-nav' : ''}`}
         variants={routeTransition}
         initial="initial"
         animate="animate"

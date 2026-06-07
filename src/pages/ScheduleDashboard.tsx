@@ -8,6 +8,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useEvents, useEventMutations } from '@/hooks/useEvents'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import { getUserFacingError } from '@/lib/userFacingError'
+import { useToast } from '@/contexts/ToastContext'
 import { useStudentPlanNotifications } from '@/hooks/useStudentPlanNotifications'
 import { isConfigured } from '@/lib/firebase'
 import WeekCalendar, { sameDay } from '@/components/schedule/WeekCalendar'
@@ -17,6 +18,8 @@ import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { SkeletonTimeline } from '@/components/ui/Skeleton'
 import type { AppEvent } from '@/types'
+import AppHeader from '@/components/layout/AppHeader'
+import AppPage from '@/components/layout/AppPage'
 
 function EmptyDay({ canAdd }: { canAdd: boolean }) {
   const { t } = useTranslation()
@@ -45,6 +48,7 @@ function EmptyDay({ canAdd }: { canAdd: boolean }) {
 
 export default function ScheduleDashboard() {
   const { t }      = useTranslation()
+  const { showToast } = useToast()
   const { role }   = useApp()
   const { isDark } = useTheme()
   const userId     = useAppStore((s) => s.userId)
@@ -80,9 +84,13 @@ export default function ScheduleDashboard() {
 
   const handleToggleComplete = useCallback(
     async (id: string, completed: boolean) => {
-      await toggleComplete(id, !completed)
+      try {
+        await toggleComplete(id, !completed)
+      } catch (err) {
+        showToast(getUserFacingError(err, t))
+      }
     },
-    [toggleComplete],
+    [toggleComplete, showToast, t],
   )
 
   const handleEditById = useCallback(
@@ -110,8 +118,8 @@ export default function ScheduleDashboard() {
   const isToday = sameDay(selectedDate, now)
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
-      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
+    <AppPage className={isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}>
+      <AppHeader>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
             <Calendar className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -145,7 +153,7 @@ export default function ScheduleDashboard() {
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
-      </header>
+      </AppHeader>
 
       {/* Host: new student plan notification */}
       <AnimatePresence>
@@ -188,7 +196,7 @@ export default function ScheduleDashboard() {
         events={rawEvents}
       />
 
-      <main className="max-w-lg mx-auto pt-4 pb-4">
+      <main className="app-main !pt-4 !space-y-4">
         {loading && <SkeletonTimeline />}
 
         {!loading && error && (
@@ -244,7 +252,7 @@ export default function ScheduleDashboard() {
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ duration: 0.2 }}
             onClick={openAdd}
-            className={`fixed bottom-[88px] right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            className={`fab-above-nav fixed right-5 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
               isStudent
                 ? 'bg-gradient-to-br from-fuchsia-500 to-violet-600 focus-visible:ring-fuchsia-400'
                 : 'bg-gradient-to-br from-primary-500 to-violet-600 focus-visible:ring-primary-400'
@@ -265,6 +273,6 @@ export default function ScheduleDashboard() {
         defaultDate={selectedDate}
         mode={modalMode}
       />
-    </div>
+    </AppPage>
   )
 }

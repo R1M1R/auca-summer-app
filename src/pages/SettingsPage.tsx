@@ -15,6 +15,8 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { fadeUpLight } from '@/lib/motion'
 import NotificationsSettings from '@/components/settings/NotificationsSettings'
 import AppInstallationSettings from '@/components/settings/AppInstallationSettings'
+import AppHeader from '@/components/layout/AppHeader'
+import AppPage from '@/components/layout/AppPage'
 
 const DataImporter = lazy(() => import('@/components/admin/DataImporter'))
 
@@ -151,8 +153,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}`}>
-      <header className="sticky top-0 z-30 glass-card rounded-none rounded-b-2xl px-5 pt-4 pb-3 flex items-center justify-between">
+    <AppPage className={isDark ? 'bg-mesh-dark' : 'bg-mesh-light'}>
+      <AppHeader>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-sm">
             <Settings className="w-5 h-5 text-white" strokeWidth={1.5} />
@@ -162,13 +164,13 @@ export default function SettingsPage() {
           </p>
         </div>
         <ThemeToggle />
-      </header>
+      </AppHeader>
 
       <motion.main
         variants={stagger}
         initial={false}
         animate="animate"
-        className="px-4 pt-5 space-y-5 max-w-lg mx-auto"
+        className="app-main"
       >
         <Section title={t('settings.appearance')}>
           <Row icon={Sun} label={t('settings.theme')} gradient="from-amber-400 to-orange-500">
@@ -277,6 +279,6 @@ export default function SettingsPage() {
           </motion.div>
         )}
       </motion.main>
-    </div>
+    </AppPage>
   )
 }

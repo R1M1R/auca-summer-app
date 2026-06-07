@@ -37,3 +37,8 @@ export function markEventNotified(eventId: string): void {
   data[day] = [...list, eventId]
   write(data)
 }
+
+export function getNotifiedIdsForToday(): string[] {
+  const day = todayKey()
+  return read()[day] ?? []
+}

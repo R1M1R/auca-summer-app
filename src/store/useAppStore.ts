@@ -68,7 +68,7 @@ export const useAppStore = create<AppState>()(
         set({ role: 'student', language: studentLang })
       },
 
-      clearRole: () => set({ role: null, studentName: '', userId: '' }),
+      clearRole: () => set({ role: null, studentName: '' }),
 
       studentName:    '',
       setStudentName: (name) => set({ studentName: name }),

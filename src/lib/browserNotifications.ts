@@ -11,12 +11,20 @@ export function canShowNotifications(): boolean {
   return notificationPermission() === 'granted'
 }
 
+function isStandalonePwa(): boolean {
+  if (typeof window === 'undefined') return false
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+  )
+}
+
 async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null
   try {
     const ready = navigator.serviceWorker.ready
     const timeout = new Promise<null>((resolve) => {
-      window.setTimeout(() => resolve(null), 2000)
+      window.setTimeout(() => resolve(null), 3000)
     })
     const reg = await Promise.race([ready, timeout])
     return reg ?? null
@@ -26,8 +34,8 @@ async function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration
 }
 
 /**
- * System notification (foreground: Notification API; PWA: SW when available).
- * Returns true if a notification was shown.
+ * System notification — prefers Service Worker when tab is hidden or app is installed PWA
+ * so reminders can appear while the app is in the background.
  */
 export async function showBrowserNotification(
   title: string,
@@ -42,8 +50,22 @@ export async function showBrowserNotification(
     ...options,
   }
 
-  /* Foreground tab: direct API is most reliable (avoids SW hang in dev) */
-  if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+  const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden'
+  const preferSw = hidden || isStandalonePwa()
+
+  if (preferSw) {
+    try {
+      const reg = await getServiceWorkerRegistration()
+      if (reg?.showNotification) {
+        await reg.showNotification(title, payload)
+        return true
+      }
+    } catch (err) {
+      console.warn('[notifications] Service Worker', err)
+    }
+  }
+
+  if (!hidden) {
     try {
       new Notification(title, payload)
       return true
@@ -59,7 +81,7 @@ export async function showBrowserNotification(
       return true
     }
   } catch (err) {
-    console.warn('[notifications] Service Worker', err)
+    console.warn('[notifications] Service Worker fallback', err)
   }
 
   try {

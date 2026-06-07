@@ -149,7 +149,10 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
     if (Number.isNaN(parsedDate.getTime())) {
       if (!errors.date) errors.date = t('schedule.modal.validation.dateInvalid')
       if (!errors.time) errors.time = t('schedule.modal.validation.timeInvalid')
-    } else if (parsedDate.getTime() <= Date.now()) {
+    } else if (!isEdit && parsedDate.getTime() <= Date.now()) {
+      errors.date = t('schedule.modal.futureDateError')
+      errors.time = t('schedule.modal.futureDateError')
+    } else if (isEdit && isStudent && parsedDate.getTime() <= Date.now()) {
       errors.date = t('schedule.modal.futureDateError')
       errors.time = t('schedule.modal.futureDateError')
     }
@@ -366,16 +369,21 @@ export default function AddEventModal({ open, onClose, editingEvent, defaultDate
                   className="btn-primary w-full h-12 flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
                 >
                   {submitting ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-                    />
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                        className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                      />
+                      {isStudent && (
+                        <span>{t('schedule.modal.translating')}</span>
+                      )}
+                    </>
                   ) : (
                     <span>
-                      {submitting && isStudent
-                        ? t('schedule.modal.translating')
-                        : (isEdit ? t('schedule.modal.saveChanges') : (isStudent ? t('schedule.modal.addMyPlan') : t('schedule.modal.addToSchedule')))}
+                      {isEdit
+                        ? t('schedule.modal.saveChanges')
+                        : (isStudent ? t('schedule.modal.addMyPlan') : t('schedule.modal.addToSchedule'))}
                     </span>
                   )}
                 </motion.button>
