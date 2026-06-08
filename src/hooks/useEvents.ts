@@ -14,8 +14,11 @@ import { useEventsStore } from '@/store/useEventsStore'
 import {
   canStudentEditEvent,
   canFamilyManageEvents,
+  canFamilyEditEvent,
+  canFamilyDeleteEvent,
   canToggleEventComplete,
 } from '@/lib/eventPermissions'
+import { completionFieldForStudent } from '@/lib/eventCompletion'
 import { buildEventRussianFields } from '@/lib/dualSave'
 import { sanitizeFirestoreData } from '@/lib/firestoreSanitize'
 import {
@@ -45,7 +48,12 @@ export function useEventMutations() {
 
   const assertCanEdit = useCallback(
     (event: AppEvent) => {
-      if (canFamilyMutate) return
+      if (canFamilyMutate) {
+        if (!canFamilyEditEvent(event)) {
+          throw new Error('You cannot edit this event')
+        }
+        return
+      }
       const uid = userId || ensureUserId()
       if (!canStudentEditEvent(event, uid)) {
         throw new Error('You cannot edit this event')
@@ -56,7 +64,12 @@ export function useEventMutations() {
 
   const assertCanDelete = useCallback(
     (event: AppEvent) => {
-      if (canFamilyMutate) return
+      if (canFamilyMutate) {
+        if (!canFamilyDeleteEvent(event)) {
+          throw new Error('You cannot delete this event')
+        }
+        return
+      }
       const uid = userId || ensureUserId()
       if (!canStudentEditEvent(event, uid)) {
         throw new Error('You cannot delete this event')
@@ -241,27 +254,37 @@ export function useEventMutations() {
   )
 
   const toggleComplete = useCallback(
-    async (id: string, completed: boolean): Promise<void> => {
+    async (event: AppEvent, completed: boolean): Promise<void> => {
       if (!canToggleEventComplete(role)) {
         throw new Error('Only students can change completion status')
       }
 
+      const uid = userId || ensureUserId()
+      const field = completionFieldForStudent(event, uid)
+      if (!field) {
+        throw new Error('You cannot change completion status for this event')
+      }
+
       if (!isConfigured) {
         const list = loadDemoEvents()
-        const idx  = list.findIndex((e) => e.id === id)
+        const idx  = list.findIndex((e) => e.id === event.id)
         if (idx === -1) return
-        list[idx] = { ...list[idx], completed, updatedAt: new Date() }
+        list[idx] = {
+          ...list[idx],
+          [field]: completed,
+          updatedAt: new Date(),
+        }
         saveDemoEvents(list)
         notifyDemoEventsUpdate()
         return
       }
 
-      await updateDoc(doc(db, EVENTS_COLLECTION, id), {
-        completed,
+      await updateDoc(doc(db, EVENTS_COLLECTION, event.id), {
+        [field]:   completed,
         updatedAt: serverTimestamp(),
       })
     },
-    [role],
+    [role, userId, ensureUserId],
   )
 
   return {

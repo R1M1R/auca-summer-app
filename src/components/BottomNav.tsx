@@ -14,10 +14,13 @@ const ITEMS = [
   { key: 'settings',    path: '/settings',   Icon: Settings        },
 ] as const
 
+const SECONDARY_PATHS = ['/culture'] as const
+
 /** Show bottom nav on main app tabs (not welcome / redirects). */
 export function shouldShowBottomNav(pathname: string, hasRole: boolean): boolean {
   if (!hasRole) return false
   if (pathname === '/') return false
+  if (SECONDARY_PATHS.includes(pathname as (typeof SECONDARY_PATHS)[number])) return true
   return ITEMS.some(
     (i) => pathname === i.path || (i.path !== '/dashboard' && pathname.startsWith(i.path)),
   )

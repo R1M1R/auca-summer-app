@@ -45,8 +45,10 @@ export interface FirestoreEvent {
   category:        EventCategory
   /** User id, 'admin', or legacy 'host' */
   createdBy:       string
-  isEditable:      boolean
-  completed:       boolean
+  isEditable:        boolean
+  completed:         boolean
+  /** Student progress on program events — visible to host family */
+  studentCompleted?: boolean
   createdAt:       Timestamp
   updatedAt:       Timestamp
 }
@@ -71,8 +73,9 @@ export interface AppEvent {
   timeDisplay?:    string
   category:        EventCategory
   createdBy:       string
-  isEditable:      boolean
-  completed:       boolean
+  isEditable:        boolean
+  completed:         boolean
+  studentCompleted?: boolean
   createdAt:       Date
   updatedAt:       Date
 }

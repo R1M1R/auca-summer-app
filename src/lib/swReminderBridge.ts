@@ -3,6 +3,7 @@ import { sameDay } from '@/components/schedule/WeekCalendar'
 import { REMINDER_WINDOW_MIN } from '@/lib/eventReminderLogic'
 import { eventHasExactTime } from '@/lib/eventTime'
 import { getNotifiedIdsForToday, hasNotifiedEvent } from '@/lib/notifiedEventsStorage'
+import { getEventCompleted } from '@/lib/eventCompletion'
 import type { AppEvent } from '@/types'
 
 export interface SwReminderJob {
@@ -20,7 +21,7 @@ export function buildReminderJobs(events: AppEvent[], t: TFunction): SwReminderJ
   const jobs: SwReminderJob[] = []
 
   for (const event of events) {
-    if (!eventHasExactTime(event) || event.completed) continue
+    if (!eventHasExactTime(event) || getEventCompleted(event, 'student')) continue
     if (!sameDay(event.date, now)) continue
     if (hasNotifiedEvent(event.id)) continue
 

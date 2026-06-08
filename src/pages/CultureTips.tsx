@@ -294,8 +294,10 @@ export default function CultureTips() {
       <AppHeader>
         <div className="flex items-center gap-3">
           <motion.button
+            type="button"
             whileTap={{ scale: 0.88 }}
             onClick={() => navigate(-1)}
+            aria-label={t('cultureTips.back')}
             className="w-9 h-9 rounded-xl glass-card flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors mr-1"
           >
             <ArrowLeft className="w-5 h-5" />

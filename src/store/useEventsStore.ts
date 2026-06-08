@@ -12,6 +12,7 @@ import {
   subscribeDemoEvents,
   EVENTS_COLLECTION,
 } from '@/lib/eventsData'
+import { detectStudentActivities, type StudentActivity } from '@/lib/studentActivity'
 import type { AppEvent, FirestoreEvent } from '@/types'
 
 interface EventsStore {
@@ -34,9 +35,14 @@ export const useEventsStore = create<EventsStore>((set) => ({
 
 let stopEventsSync: (() => void) | null = null
 let lastEventIds = new Set<string>()
+let lastEventsById = new Map<string, AppEvent>()
+let eventsSnapshotPrimed = false
 
 type EventsAddListener = (added: AppEvent[]) => void
 const eventsAddListeners = new Set<EventsAddListener>()
+
+type StudentActivityListener = (activities: StudentActivity[]) => void
+const studentActivityListeners = new Set<StudentActivityListener>()
 
 /** Fired from Firestore/demo sync when new event documents appear */
 export function subscribeEventsAdds(listener: EventsAddListener): () => void {
@@ -44,16 +50,39 @@ export function subscribeEventsAdds(listener: EventsAddListener): () => void {
   return () => eventsAddListeners.delete(listener)
 }
 
+/** Fired when student schedule activity is detected (plans, completion, edits). */
+export function subscribeStudentActivities(listener: StudentActivityListener): () => void {
+  studentActivityListeners.add(listener)
+  return () => studentActivityListeners.delete(listener)
+}
+
 function notifyEventsAdds(added: AppEvent[]): void {
   if (added.length === 0) return
   eventsAddListeners.forEach((fn) => fn(added))
 }
 
+function notifyStudentActivities(activities: StudentActivity[]): void {
+  if (activities.length === 0) return
+  studentActivityListeners.forEach((fn) => fn(activities))
+}
+
 function applyEvents(entries: AppEvent[]): void {
+  if (!eventsSnapshotPrimed) {
+    lastEventIds = new Set(entries.map((e) => e.id))
+    lastEventsById = new Map(entries.map((e) => [e.id, e]))
+    eventsSnapshotPrimed = true
+    useEventsStore.getState().setEvents(entries)
+    return
+  }
+
   const added = entries.filter((e) => !lastEventIds.has(e.id))
+  const activities = detectStudentActivities(lastEventsById, entries)
+
   lastEventIds = new Set(entries.map((e) => e.id))
+  lastEventsById = new Map(entries.map((e) => [e.id, e]))
   useEventsStore.getState().setEvents(entries)
   notifyEventsAdds(added)
+  notifyStudentActivities(activities)
 }
 
 export function startEventsSync(): () => void {
@@ -73,6 +102,8 @@ export function startEventsSync(): () => void {
     stopEventsSync = () => {
       unsubDemo()
       lastEventIds = new Set()
+      lastEventsById = new Map()
+      eventsSnapshotPrimed = false
       stopEventsSync = null
     }
     return stopEventsSync
@@ -101,6 +132,8 @@ export function startEventsSync(): () => void {
   stopEventsSync = () => {
     unsubFirestore()
     lastEventIds = new Set()
+    lastEventsById = new Map()
+    eventsSnapshotPrimed = false
     stopEventsSync = null
   }
   return stopEventsSync
@@ -109,4 +142,6 @@ export function startEventsSync(): () => void {
 export function stopEventsSyncIfRunning(): void {
   stopEventsSync?.()
   lastEventIds = new Set()
+  lastEventsById = new Map()
+  eventsSnapshotPrimed = false
 }

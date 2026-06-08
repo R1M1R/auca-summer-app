@@ -20,6 +20,7 @@ import { useStudentProfile } from '@/hooks/useStudentProfile'
 import { getStudentPresenceState } from '@/lib/studentPresence'
 import { usePresenceClock } from '@/hooks/usePresenceClock'
 import { isStudentPlanForFamily, canToggleEventComplete } from '@/lib/eventPermissions'
+import { getEventCompleted, canStudentToggleCompletion } from '@/lib/eventCompletion'
 import EventCompleteToggle from '@/components/schedule/EventCompleteToggle'
 import AddEventModal from '@/components/schedule/AddEventModal'
 import { isConfigured } from '@/lib/firebase'
@@ -39,7 +40,16 @@ import WelcomeModal from '@/components/welcome/WelcomeModal'
 import { SkeletonEventList } from '@/components/ui/Skeleton'
 import { getUserFacingError } from '@/lib/userFacingError'
 
-const BEFORE_MEETING = Date.now() < MEETING_DATE.getTime()
+function useBeforeMeeting(): boolean {
+  const [before, setBefore] = useState(() => Date.now() < MEETING_DATE.getTime())
+  useEffect(() => {
+    const tick = () => setBefore(Date.now() < MEETING_DATE.getTime())
+    tick()
+    const id = setInterval(tick, 60_000)
+    return () => clearInterval(id)
+  }, [])
+  return before
+}
 
 /* ── Category pill colours ──────────────────────────────────── */
 const CATEGORY_COLORS: Record<EventCategory, string> = {
@@ -91,6 +101,7 @@ function categoryLabel(t: (key: string) => string, category: EventCategory): str
 
 export default function Dashboard() {
   const { t, i18n }     = useTranslation()
+  const beforeMeeting   = useBeforeMeeting()
   const { role }        = useApp()
   const { isDark }      = useTheme()
   const { openSOS }     = useUI()
@@ -105,6 +116,7 @@ export default function Dashboard() {
   const { events: rawEvents, loading, error } = useEvents()
   const events = useLocalizedEvents(rawEvents)
   const { toggleComplete, canFamilyMutate, canAddStudentPlan } = useEventMutations()
+  const userId       = useAppStore((s) => s.userId)
   const ensureUserId = useAppStore((s) => s.ensureUserId)
   const { hasNew, count, markSeen } = useStudentPlanNotifications(events)
   const [showPlanModal, setShowPlanModal] = useState(false)
@@ -155,19 +167,23 @@ export default function Dashboard() {
     [events],
   )
   const today = useMemo(() => new Date(), [])
-  const pendingEvents   = upcomingWindowEvents.filter((e) => !e.completed)
-  const completedEvents = upcomingWindowEvents.filter((e) =>  e.completed)
+  const pendingEvents   = upcomingWindowEvents.filter((e) => !getEventCompleted(e, role))
+  const completedEvents = upcomingWindowEvents.filter((e) =>  getEventCompleted(e, role))
   const completedToday  = useMemo(
-    () => events.filter((e) => e.completed && sameDay(e.date, today)),
-    [events, today],
+    () => events.filter((e) => getEventCompleted(e, role) && sameDay(e.date, today)),
+    [events, today, role],
+  )
+  const studentPlansCount = useMemo(
+    () => events.filter((e) => isStudentPlanForFamily(e)).length,
+    [events],
   )
 
-  const canToggleDone = canToggleEventComplete(role)
+  const canToggleRole = canToggleEventComplete(role)
 
-  const handleToggle = async (id: string, completed: boolean) => {
-    if (!canToggleDone) return
+  const handleToggle = async (event: typeof events[number], completed: boolean) => {
+    if (!canToggleRole || !canStudentToggleCompletion(event, userId)) return
     try {
-      await toggleComplete(id, !completed)
+      await toggleComplete(event, !completed)
       if (!completed) incrementTasks()
     } catch (err) {
       showToast(getUserFacingError(err, t))
@@ -324,21 +340,21 @@ export default function Dashboard() {
         </motion.div>
 
         {/* ── Countdown timer (both roles, before June 7) ── */}
-        {BEFORE_MEETING && (
+        {beforeMeeting && (
           <motion.div variants={scaleIn}>
             <CountdownTimer />
           </motion.div>
         )}
 
         {/* ── Pre-arrival onboarding (before June 7, role-specific) ── */}
-        {BEFORE_MEETING && (
+        {beforeMeeting && (
           <motion.div variants={scaleIn}>
             <PreArrivalCard role={role} />
           </motion.div>
         )}
 
         {/* ── Program progress bar (student only, after meeting date) ── */}
-        {role === 'student' && !BEFORE_MEETING && (
+        {role === 'student' && !beforeMeeting && (
           <motion.div variants={scaleIn}>
             <ProgramProgressBar />
           </motion.div>
@@ -346,26 +362,48 @@ export default function Dashboard() {
 
         {/* ── Quick stats row ── */}
         <motion.div variants={container} className="grid grid-cols-3 gap-3">
-          {[
-            {
-              icon:     <ListTodo className="w-4 h-4" />,
-              value:    pendingEvents.length,
-              label:    t('dashboard.tasksLeft'),
-              gradient: 'from-primary-500 to-violet-600',
-            },
-            {
-              icon:     <CheckCircle2 className="w-4 h-4" />,
-              value:    tasksCompleted,
-              label:    t('dashboard.tasksDone'),
-              gradient: 'from-emerald-500 to-teal-600',
-            },
-            {
-              icon:     <Calendar className="w-4 h-4" />,
-              value:    completedToday.length,
-              label:    t('dashboard.doneToday'),
-              gradient: 'from-orange-500 to-rose-500',
-            },
-          ].map((s, i) => (
+          {(role === 'family'
+            ? [
+                {
+                  icon:     <ListTodo className="w-4 h-4" />,
+                  value:    pendingEvents.length,
+                  label:    t('dashboard.familyUpcoming'),
+                  gradient: 'from-primary-500 to-violet-600',
+                },
+                {
+                  icon:     <BookUser className="w-4 h-4" />,
+                  value:    studentPlansCount,
+                  label:    t('dashboard.familyStudentPlans'),
+                  gradient: 'from-fuchsia-500 to-violet-600',
+                },
+                {
+                  icon:     <CheckCircle2 className="w-4 h-4" />,
+                  value:    completedToday.length,
+                  label:    t('dashboard.familyDoneToday'),
+                  gradient: 'from-emerald-500 to-teal-600',
+                },
+              ]
+            : [
+                {
+                  icon:     <ListTodo className="w-4 h-4" />,
+                  value:    pendingEvents.length,
+                  label:    t('dashboard.tasksLeft'),
+                  gradient: 'from-primary-500 to-violet-600',
+                },
+                {
+                  icon:     <CheckCircle2 className="w-4 h-4" />,
+                  value:    tasksCompleted,
+                  label:    t('dashboard.tasksDone'),
+                  gradient: 'from-emerald-500 to-teal-600',
+                },
+                {
+                  icon:     <Calendar className="w-4 h-4" />,
+                  value:    completedToday.length,
+                  label:    t('dashboard.doneToday'),
+                  gradient: 'from-orange-500 to-rose-500',
+                },
+              ]
+          ).map((s, i) => (
             <motion.div key={i} variants={scaleIn} className="glass-card p-4 flex flex-col gap-2">
               <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center text-white shadow-sm`}>
                 {s.icon}
@@ -530,11 +568,17 @@ export default function Dashboard() {
                   className="glass-card card-pad flex items-start gap-3 group"
                 >
                   <EventCompleteToggle
-                    completed={event.completed}
-                    canToggle={canToggleDone}
-                    onToggle={() => handleToggle(event.id, event.completed)}
+                    completed={getEventCompleted(event, role)}
+                    canToggle={canToggleRole && canStudentToggleCompletion(event, userId)}
+                    onToggle={() => handleToggle(event, getEventCompleted(event, role))}
                     ariaLabel={t('dashboard.markDone', { title: event.title })}
-                    ariaLabelReadOnly={t('dashboard.pendingReadOnly', { title: event.title })}
+                    ariaLabelReadOnly={
+                      role === 'family'
+                        ? (getEventCompleted(event, role)
+                            ? t('dashboard.familyStudentDone', { title: event.title })
+                            : t('dashboard.familyStudentPending', { title: event.title }))
+                        : t('dashboard.pendingReadOnly', { title: event.title })
+                    }
                   />
 
                   {/* Content */}
@@ -581,11 +625,11 @@ export default function Dashboard() {
                         className="glass-card px-4 py-2.5 flex items-center gap-3 opacity-60"
                       >
                         <EventCompleteToggle
-                          completed={event.completed}
-                          canToggle={canToggleDone}
-                          onToggle={() => handleToggle(event.id, event.completed)}
+                          completed={getEventCompleted(event, role)}
+                          canToggle={canToggleRole && canStudentToggleCompletion(event, userId)}
+                          onToggle={() => handleToggle(event, getEventCompleted(event, role))}
                           ariaLabel={t('dashboard.markUndone', { title: event.title })}
-                          ariaLabelReadOnly={t('dashboard.doneReadOnly', { title: event.title })}
+                          ariaLabelReadOnly={t('dashboard.familyStudentDone', { title: event.title })}
                           className="mt-0"
                         />
                         <p className="flex-1 text-sm text-slate-500 dark:text-slate-400 line-through truncate">

@@ -91,11 +91,110 @@ function stopPoll(): void {
   pollId = null
 }
 
+/* ── Diary background watch (family role) ───────────────────── */
+
+interface DiaryWatchEntry {
+  id:        string
+  updatedAt: number
+}
+
+interface DiaryWatchState {
+  projectId:    string
+  apiKey:       string
+  sessionStart: number
+  known:        Map<string, number>
+  notifyTitle:  string
+  notifyBody:   string
+}
+
+let diaryWatch: DiaryWatchState | null = null
+let diaryPollId: ReturnType<typeof setInterval> | null = null
+const diaryNotifiedKeys = new Set<string>()
+
+function parseFirestoreTimestamp(fields: Record<string, unknown> | undefined): number {
+  if (!fields?.updatedAt) return 0
+  const ts = fields.updatedAt as { timestampValue?: string }
+  if (!ts.timestampValue) return 0
+  return new Date(ts.timestampValue).getTime()
+}
+
+async function pollDiaryEntries(): Promise<void> {
+  if (!diaryWatch) return
+
+  const { projectId, apiKey, sessionStart, notifyTitle, notifyBody } = diaryWatch
+  const url =
+    `https://firestore.googleapis.com/v1/projects/${projectId}` +
+    `/databases/(default)/documents/diary_entries?key=${encodeURIComponent(apiKey)}&pageSize=30`
+
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return
+
+    const data = (await res.json()) as {
+      documents?: Array<{
+        name?: string
+        fields?: Record<string, unknown>
+      }>
+    }
+
+    for (const doc of data.documents ?? []) {
+      const id = doc.name?.split('/').pop()
+      if (!id) continue
+
+      const updatedAt = parseFirestoreTimestamp(doc.fields)
+      const prevUpdated = diaryWatch.known.get(id) ?? 0
+      const notifyKey = `${id}:${updatedAt}`
+
+      if (diaryNotifiedKeys.has(notifyKey)) continue
+
+      const isNew = !diaryWatch.known.has(id)
+      const isUpdated = updatedAt > prevUpdated && updatedAt >= sessionStart
+
+      if (!isNew && !isUpdated) continue
+      if (updatedAt > 0 && updatedAt < sessionStart && isNew) continue
+
+      diaryNotifiedKeys.add(notifyKey)
+      diaryWatch.known.set(id, updatedAt)
+
+      await self.registration.showNotification(notifyTitle, {
+        body:  notifyBody,
+        icon:  '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        tag:   `diary-${id}`,
+        data:  { entryId: id, type: 'diary_entry' },
+      })
+    }
+  } catch (err) {
+    console.warn('[sw] diary poll failed', err)
+  }
+}
+
+function startDiaryPoll(intervalMs: number): void {
+  if (diaryPollId) return
+  void pollDiaryEntries()
+  diaryPollId = setInterval(() => { void pollDiaryEntries() }, intervalMs)
+}
+
+function stopDiaryPoll(): void {
+  if (!diaryPollId) return
+  clearInterval(diaryPollId)
+  diaryPollId = null
+}
+
 self.addEventListener('message', (event: ExtendableMessageEvent) => {
   const data = event.data as {
     type?: string
     jobs?: ReminderJob[]
     notifiedIds?: string[]
+    config?: {
+      projectId:     string
+      apiKey:        string
+      sessionStart:  number
+      knownEntries:  DiaryWatchEntry[]
+      notifyTitle:   string
+      notifyBody:    string
+    }
+    pollMs?: number
   } | null
 
   if (!data?.type) return
@@ -122,6 +221,28 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
       clearTimers()
       stopPoll()
       break
+    case 'DIARY_WATCH_START': {
+      const cfg = data.config
+      if (!cfg?.projectId || !cfg.apiKey) break
+      const known = new Map<string, number>()
+      for (const entry of cfg.knownEntries ?? []) {
+        known.set(entry.id, entry.updatedAt)
+      }
+      diaryWatch = {
+        projectId:    cfg.projectId,
+        apiKey:       cfg.apiKey,
+        sessionStart: cfg.sessionStart,
+        known,
+        notifyTitle:  cfg.notifyTitle,
+        notifyBody:   cfg.notifyBody,
+      }
+      startDiaryPoll(typeof data.pollMs === 'number' ? data.pollMs : 180_000)
+      break
+    }
+    case 'DIARY_WATCH_STOP':
+      diaryWatch = null
+      stopDiaryPoll()
+      break
     default:
       break
   }
@@ -129,12 +250,20 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close()
+  const notifType = (event.notification.data as { type?: string } | undefined)?.type
+  const targetPath =
+    notifType === 'diary_entry' ? '/diary'
+    : notifType === 'student_prefs' ? '/diary'
+    : notifType === 'student_activity' ? '/schedule'
+    : '/dashboard'
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      if (list.length > 0) {
-        return list[0].focus()
+      const match = list.find((c) => 'focus' in c)
+      if (match && 'focus' in match) {
+        return (match as WindowClient).focus()
       }
-      return self.clients.openWindow('/dashboard')
+      return self.clients.openWindow(targetPath)
     }),
   )
 })

@@ -7,6 +7,7 @@ import {
   CheckCircle2, Circle, AlertTriangle, BookUser, ShieldAlert,
 } from 'lucide-react'
 import { showEditDeleteOnCard, isStudentPlanForFamily, canToggleEventComplete } from '@/lib/eventPermissions'
+import { getEventCompleted, canStudentToggleCompletion } from '@/lib/eventCompletion'
 import EventCompleteToggle from '@/components/schedule/EventCompleteToggle'
 import { useDisplayEvent } from '@/hooks/useDisplayEvent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
@@ -93,7 +94,7 @@ interface Props {
   userId:             string
   onEditById:         (id: string) => void
   onDeleteById:       (id: string) => void
-  onToggleComplete?: (id: string, completed: boolean) => void
+  onToggleComplete?: (event: AppEvent, completed: boolean) => void
 }
 
 function eventCardPropsEqual(prev: Props, next: Props): boolean {
@@ -103,6 +104,7 @@ function eventCardPropsEqual(prev: Props, next: Props): boolean {
     a.id === b.id &&
     a.updatedAt.getTime() === b.updatedAt.getTime() &&
     a.completed === b.completed &&
+    a.studentCompleted === b.studentCompleted &&
     a.title === b.title &&
     a.titleRu === b.titleRu &&
     a.date.getTime() === b.date.getTime() &&
@@ -152,7 +154,9 @@ function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComp
 
   const isStudent       = role === 'student'
   const isFamily        = role === 'family'
-  const canToggleDone   = canToggleEventComplete(role)
+  const canExpand       = isStudent || isFamily
+  const isDone          = getEventCompleted(display, role)
+  const canToggleDone   = canToggleEventComplete(role) && canStudentToggleCompletion(event, userId)
   const isStudentPlan = isStudentPlanForFamily(display)
   const { canEdit, canDelete } = showEditDeleteOnCard(event, role, userId)
 
@@ -180,29 +184,33 @@ function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComp
         className={`flex-1 min-w-0 border rounded-2xl mb-3 overflow-hidden ${cfg.lightBg} ${cfg.border} ${cardRing}`}
       >
         <div
-          role={isStudent ? 'button' : undefined}
-          tabIndex={isStudent ? 0 : undefined}
-          onClick={() => isStudent && setExpanded((v) => !v)}
-          onKeyDown={(e) => isStudent && e.key === 'Enter' && setExpanded((v) => !v)}
-          className={`flex gap-3 p-5 ${isStudent ? 'cursor-pointer' : ''}`}
+          role={canExpand ? 'button' : undefined}
+          tabIndex={canExpand ? 0 : undefined}
+          onClick={() => canExpand && setExpanded((v) => !v)}
+          onKeyDown={(e) => canExpand && e.key === 'Enter' && setExpanded((v) => !v)}
+          className={`flex gap-3 p-5 ${canExpand ? 'cursor-pointer' : ''}`}
         >
           <EventCompleteToggle
-            completed={display.completed}
+            completed={isDone}
             canToggle={canToggleDone}
             onToggle={
               canToggleDone && onToggleComplete
-                ? () => onToggleComplete(event.id, display.completed)
+                ? () => onToggleComplete(event, isDone)
                 : undefined
             }
             ariaLabel={
-              display.completed
+              isDone
                 ? t('eventCard.markIncomplete', { title: display.title })
                 : t('eventCard.markComplete', { title: display.title })
             }
             ariaLabelReadOnly={
-              display.completed
-                ? t('eventCard.completedReadOnly', { title: display.title })
-                : t('eventCard.pendingReadOnly', { title: display.title })
+              isDone
+                ? (isFamily
+                    ? t('eventCard.familyStudentDone', { title: display.title })
+                    : t('eventCard.completedReadOnly', { title: display.title }))
+                : (isFamily
+                    ? t('eventCard.familyStudentPending', { title: display.title })
+                    : t('eventCard.pendingReadOnly', { title: display.title }))
             }
           />
 
@@ -212,11 +220,11 @@ function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComp
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start gap-2">
-              <p className={`text-base font-semibold text-slate-900 dark:text-slate-50 leading-snug flex-1 ${display.completed ? 'line-through opacity-50' : ''}`}>
+              <p className={`text-base font-semibold text-slate-900 dark:text-slate-50 leading-snug flex-1 ${isDone ? 'line-through opacity-50' : ''}`}>
                 {display.title}
               </p>
 
-              {isStudent && (
+              {canExpand && (
                 <span
                   className="shrink-0 mt-0.5 transition-transform duration-200"
                   style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -270,9 +278,9 @@ function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComp
                   {t('eventCard.studentsPlan')}
                 </span>
               )}
-              {display.completed && (
+              {isDone && (
                 <span className="badge bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] px-2 py-0.5">
-                  {t('eventCard.done')}
+                  {isFamily ? t('eventCard.studentDoneBadge') : t('eventCard.done')}
                 </span>
               )}
             </div>
@@ -314,7 +322,7 @@ function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComp
         </AnimatePresence>
 
         <AnimatePresence initial={false}>
-          {expanded && isStudent && (
+          {expanded && canExpand && (
             <motion.div
               key="details"
               initial={{ opacity: 0, y: -8 }}
@@ -347,12 +355,12 @@ function EventCard({ event, role, userId, onEditById, onDeleteById, onToggleComp
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-xs">
-                  {display.completed
+                  {isDone
                     ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     : <Circle className={`w-3.5 h-3.5 ${cfg.textColor}`} />
                   }
-                  <span className={display.completed ? 'text-emerald-500' : 'text-slate-400'}>
-                    {display.completed
+                  <span className={isDone ? 'text-emerald-500' : 'text-slate-400'}>
+                    {isDone
                       ? t('eventCard.completed')
                       : isPast
                         ? t('eventCard.missed')

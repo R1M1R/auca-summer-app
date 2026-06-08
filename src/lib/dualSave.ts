@@ -1,4 +1,4 @@
-import { translateText, translateStringList } from '@/lib/translate'
+import { translateText, translateTextDetailed, translateStringList } from '@/lib/translate'
 
 export interface EventBilingualRu {
   title_ru?:       string
@@ -72,8 +72,9 @@ export async function buildPreferencesRussianFields(input: {
 }
 
 export interface DiaryBilingual {
-  textEn: string
-  textRu: string
+  textEn:         string
+  textRu:         string
+  translationOk:  boolean
 }
 
 /**
@@ -81,8 +82,8 @@ export interface DiaryBilingual {
  */
 export async function buildDiaryBilingualFields(text: string): Promise<DiaryBilingual> {
   const trimmed = text.trim()
-  if (!trimmed) return { textEn: '', textRu: '' }
+  if (!trimmed) return { textEn: '', textRu: '', translationOk: true }
 
-  const textRu = await translateText(trimmed, 'ru')
-  return { textEn: trimmed, textRu }
+  const { text: textRu, ok: translationOk } = await translateTextDetailed(trimmed, 'ru')
+  return { textEn: trimmed, textRu, translationOk }
 }

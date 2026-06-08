@@ -34,6 +34,14 @@ export function canFamilyManageEvents(role: UserRole): boolean {
   return role === 'family'
 }
 
+export function canFamilyEditEvent(event: AppEvent): boolean {
+  return !isStudentPlanForFamily(event)
+}
+
+export function canFamilyDeleteEvent(event: AppEvent): boolean {
+  return !isStudentPlanForFamily(event)
+}
+
 /** Only students may mark events completed / incomplete */
 export function canToggleEventComplete(role: UserRole): boolean {
   return role === 'student'

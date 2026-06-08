@@ -10,6 +10,8 @@ import MoodSelector, { MoodBadge } from '@/components/diary/MoodSelector'
 import { SkeletonCard } from '@/components/ui/Skeleton'
 import { localizeDiaryEntry } from '@/lib/localizedContent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
+import { getUserFacingError } from '@/lib/userFacingError'
+import { isConfigured } from '@/lib/firebase'
 import type { DiaryEntry, MoodLevel, UserRole } from '@/types'
 
 const TODAY     = new Date()
@@ -25,35 +27,38 @@ function formatEntryDate(d: Date, t: (key: string) => string, locale: string): s
 }
 
 interface ComposerProps {
-  existing: DiaryEntry | null
+  source:  DiaryEntry | null
+  display: DiaryEntry | null
 }
 
-function EntryComposer({ existing }: ComposerProps) {
+function EntryComposer({ source, display }: ComposerProps) {
   const { t, i18n } = useTranslation()
   const { saveEntry, saving, error } = useDiaryMutations()
-  const [text,    setText]    = useState(existing?.textEn ?? existing?.text ?? '')
-  const [mood,    setMood]    = useState<MoodLevel | null>(existing?.mood ?? null)
-  const [editing, setEditing] = useState(!existing)
+  const [text,    setText]    = useState(source?.textEn ?? source?.text ?? '')
+  const [mood,    setMood]    = useState<MoodLevel | null>(source?.mood ?? null)
+  const [editing, setEditing] = useState(!source)
   const [saved,   setSaved]   = useState(false)
+  const [translateWarn, setTranslateWarn] = useState(false)
 
   const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
 
   useEffect(() => {
     if (!editing) {
-      setText(existing?.textEn ?? existing?.text ?? '')
-      setMood(existing?.mood  ?? null)
+      setText(source?.textEn ?? source?.text ?? '')
+      setMood(source?.mood  ?? null)
     }
-  }, [existing, editing])
+  }, [source, editing])
 
   const handleSave = async () => {
     if (!text.trim() || !mood) return
-    await saveEntry(TODAY, text, mood)
+    const { translationOk } = await saveEntry(TODAY, text, mood)
     setSaved(true)
+    setTranslateWarn(!translationOk)
     setEditing(false)
-    setTimeout(() => setSaved(false), 3000)
+    setTimeout(() => { setSaved(false); setTranslateWarn(false) }, 5000)
   }
 
-  if (existing && !editing) {
+  if (source && !editing) {
     return (
       <motion.div
         layout
@@ -74,10 +79,10 @@ function EntryComposer({ existing }: ComposerProps) {
           </motion.button>
         </div>
 
-        <MoodBadge mood={existing.mood} />
+        <MoodBadge mood={display?.mood ?? source.mood} />
 
         <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
-          {existing.textEn ?? existing.text}
+          {display?.text ?? source.textEn ?? source.text}
         </p>
 
         {saved && (
@@ -88,6 +93,11 @@ function EntryComposer({ existing }: ComposerProps) {
             {t('diary.impressions.saved')}
           </motion.p>
         )}
+        {translateWarn && (
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            {t('diary.impressions.translationFailed')}
+          </p>
+        )}
       </motion.div>
     )
   }
@@ -97,7 +107,7 @@ function EntryComposer({ existing }: ComposerProps) {
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-primary-500 uppercase tracking-wider flex items-center gap-1.5">
           <PenLine className="w-3.5 h-3.5" />
-          {existing ? t('diary.impressions.editToday') : t('diary.impressions.todayImpressions')}
+          {source ? t('diary.impressions.editToday') : t('diary.impressions.todayImpressions')}
         </span>
         <span className="text-[11px] text-slate-400">
           {TODAY.toLocaleDateString(dateLocale, { weekday: 'long', month: 'short', day: 'numeric' })}
@@ -123,6 +133,7 @@ function EntryComposer({ existing }: ComposerProps) {
           maxLength={1000}
           className="input-field resize-none text-sm leading-relaxed"
         />
+        <p className="text-[10px] text-slate-400">{t('diary.impressions.writeInEnglish')}</p>
         <p className="text-right text-[10px] text-slate-400 tabular-nums">
           {text.length} / 1000
         </p>
@@ -134,16 +145,24 @@ function EntryComposer({ existing }: ComposerProps) {
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             className="text-xs text-rose-500"
           >
-            {error}
+            {getUserFacingError(error, t)}
+          </motion.p>
+        )}
+        {translateWarn && (
+          <motion.p
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            className="text-xs text-amber-600 dark:text-amber-400"
+          >
+            {t('diary.impressions.translationFailed')}
           </motion.p>
         )}
       </AnimatePresence>
 
       <div className="flex gap-3">
-        {existing && (
+        {source && (
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => { setEditing(false); setText(existing.textEn ?? existing.text); setMood(existing.mood) }}
+            onClick={() => { setEditing(false); setText(source.textEn ?? source.text); setMood(source.mood) }}
             className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-500"
           >
             {t('diary.impressions.cancel')}
@@ -265,12 +284,16 @@ export default function ImpressionsTab({ role }: Props) {
         >
           <Wifi className="w-3.5 h-3.5 text-emerald-500" />
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            {t('diary.impressions.liveSync')}
+            {isConfigured
+              ? t('diary.impressions.liveSync')
+              : t('diary.impressions.liveSyncDemo')}
           </span>
         </motion.div>
       )}
 
-      {isStudent && <EntryComposer existing={todayEntry} />}
+      {isStudent && (
+        <EntryComposer source={todayEntry} display={todayDisplay} />
+      )}
 
       {loading && (
         <div className="space-y-3">
@@ -281,7 +304,7 @@ export default function ImpressionsTab({ role }: Props) {
 
       {!loading && error && (
         <div className="glass-card px-4 py-3 border-rose-200 dark:border-rose-800/40">
-          <p className="text-sm text-rose-500">{error}</p>
+          <p className="text-sm text-rose-500">{getUserFacingError(error, t)}</p>
         </div>
       )}
 

@@ -34,7 +34,8 @@ export function fromFirestore(id: string, raw: FirestoreEvent): AppEvent | null 
     category:        raw.category,
     createdBy:       legacyHost ? ADMIN_CREATOR : raw.createdBy,
     isEditable:      raw.isEditable ?? (!legacyHost && raw.createdBy !== ADMIN_CREATOR),
-    completed:       raw.completed ?? false,
+    completed:         raw.completed ?? false,
+    studentCompleted:  raw.studentCompleted ?? false,
     createdAt:       raw.createdAt?.toDate?.() ?? new Date(),
     updatedAt:       raw.updatedAt?.toDate?.() ?? new Date(),
   }

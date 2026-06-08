@@ -40,7 +40,11 @@ export function useDiaryMutations() {
   const [error,  setError]  = useState<string | null>(null)
 
   const saveEntry = useCallback(
-    async (date: Date, text: string, mood: MoodLevel): Promise<void> => {
+    async (
+      date: Date,
+      text: string,
+      mood: MoodLevel,
+    ): Promise<{ translationOk: boolean }> => {
       setSaving(true)
       setError(null)
       try {
@@ -73,7 +77,7 @@ export function useDiaryMutations() {
           else stored.unshift(entry)
           localStorage.setItem(DEMO_DIARY_KEY, JSON.stringify(stored))
           notifyDemoDiaryUpdate()
-          return
+          return { translationOk: bilingual.translationOk }
         }
 
         const ref = doc(db, DIARY_COLLECTION, key)
@@ -83,6 +87,7 @@ export function useDiaryMutations() {
           ...payload,
           ...(!snap.exists() && { createdAt: serverTimestamp() }),
         }, { merge: true })
+        return { translationOk: bilingual.translationOk }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Save failed'
         setError(msg)

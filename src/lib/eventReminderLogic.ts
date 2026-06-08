@@ -1,4 +1,5 @@
 import { sameDay } from '@/components/schedule/WeekCalendar'
+import { getEventCompleted } from '@/lib/eventCompletion'
 import { eventHasExactTime } from '@/lib/eventTime'
 import type { AppEvent } from '@/types'
 
@@ -7,7 +8,7 @@ export const REMINDER_CHECK_MS = 30_000
 
 export function minutesUntilStart(event: AppEvent, now: Date): number | null {
   if (!eventHasExactTime(event)) return null
-  if (event.completed) return null
+  if (getEventCompleted(event, 'student')) return null
   if (!sameDay(event.date, now)) return null
 
   const diffMs = event.date.getTime() - now.getTime()

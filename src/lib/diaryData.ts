@@ -29,11 +29,14 @@ export function loadDemoDiary(): DiaryEntry[] {
     if (!raw) return []
     const parsed = JSON.parse(raw) as DiaryEntry[]
     return parsed.map((e) => {
-      const textEn = (e.textEn ?? e.text)?.trim() || ''
+      const raw = e as DiaryEntry & { text_en?: string; text_ru?: string }
+      const textEn = (raw.textEn ?? raw.text_en ?? raw.text)?.trim() || ''
+      const textRu = (raw.textRu ?? raw.text_ru)?.trim() || undefined
       return {
         ...e,
         text:      textEn,
         textEn,
+        textRu,
         date:      new Date(e.date),
         createdAt: e.createdAt ? new Date(e.createdAt) : null,
         updatedAt: e.updatedAt ? new Date(e.updatedAt) : null,

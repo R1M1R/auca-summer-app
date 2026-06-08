@@ -83,9 +83,9 @@ export default function ScheduleDashboard() {
   const closeModal = () => { setShowModal(false); setEditingEvent(null) }
 
   const handleToggleComplete = useCallback(
-    async (id: string, completed: boolean) => {
+    async (event: AppEvent, completed: boolean) => {
       try {
-        await toggleComplete(id, !completed)
+        await toggleComplete(event, !completed)
       } catch (err) {
         showToast(getUserFacingError(err, t))
       }

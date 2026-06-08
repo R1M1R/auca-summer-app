@@ -38,6 +38,9 @@ export function getUserFacingError(err: unknown, t: TFunction): string {
   if (msg.includes('only students can add personal')) return t('errors.studentOnlyAdd')
   if (msg.includes('only host family')) return t('errors.familyOnlyAdd')
   if (msg.includes('only students can change completion')) return t('errors.studentOnlyComplete')
+  if (msg.includes('cannot change completion status for this event')) {
+    return t('errors.cannotToggleComplete')
+  }
 
   return t('errors.generic')
 }
