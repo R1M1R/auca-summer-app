@@ -1,1 +1,0 @@
-import{j as r}from"./index-CvesJzNH.js";function t({children:e,className:a=""}){return r.jsx("header",{className:`app-header ${a}`.trim(),children:e})}function p({children:e,className:a=""}){return r.jsx("div",{className:`min-h-full flex flex-col ${a}`.trim(),children:e})}export{p as A,t as a};
