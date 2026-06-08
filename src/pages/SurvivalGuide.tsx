@@ -17,6 +17,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { fadeUpLight } from '@/lib/motion'
 import { GIS_HOME_URL, GIS_AUCA_URL } from '@/lib/guideAddresses'
 import GuideAddressLink from '@/components/guide/GuideAddressLink'
+import RouteMap2GIS from '@/components/guide/RouteMap2GIS'
 import AppHeader from '@/components/layout/AppHeader'
 import AppPage from '@/components/layout/AppPage'
 
@@ -283,6 +284,8 @@ export default function SurvivalGuide() {
                   </div>
                 ))}
               </div>
+
+              <RouteMap2GIS />
             </div>
 
             <div className="space-y-1.5">

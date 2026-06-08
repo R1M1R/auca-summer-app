@@ -155,7 +155,9 @@ export const MOOD_CONFIG: MoodConfig[] = [
 
 export interface FirestoreDiaryEntry {
   date:      Timestamp
-  text:      string
+  /** @deprecated Use text_en — kept for older documents */
+  text?:     string
+  text_en?:  string
   text_ru?:  string
   mood:      MoodLevel
   createdAt: Timestamp
@@ -165,7 +167,9 @@ export interface FirestoreDiaryEntry {
 export interface DiaryEntry {
   id:        string
   date:      Date
+  /** Localized display text (set by localizeDiaryEntry) */
   text:      string
+  textEn:    string
   textRu?:   string
   mood:      MoodLevel
   createdAt: Date | null

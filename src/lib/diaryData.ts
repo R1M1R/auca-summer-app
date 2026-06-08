@@ -9,11 +9,14 @@ export function parseDiaryEntry(id: string, raw: FirestoreDiaryEntry): DiaryEntr
   const entryDate = raw.date.toDate()
   if (Number.isNaN(entryDate.getTime())) return null
 
+  const textEn = (raw.text_en ?? raw.text)?.trim() || ''
+
   return {
     id,
     date:      entryDate,
-    text:      raw.text?.trim() || '',
-    textRu:    raw.text_ru,
+    text:      textEn,
+    textEn,
+    textRu:    raw.text_ru?.trim() || undefined,
     mood:      raw.mood,
     createdAt: raw.createdAt?.toDate ? raw.createdAt.toDate() : null,
     updatedAt: raw.updatedAt?.toDate ? raw.updatedAt.toDate() : null,
@@ -25,12 +28,17 @@ export function loadDemoDiary(): DiaryEntry[] {
     const raw = localStorage.getItem(DEMO_DIARY_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as DiaryEntry[]
-    return parsed.map((e) => ({
-      ...e,
-      date:      new Date(e.date),
-      createdAt: e.createdAt ? new Date(e.createdAt) : null,
-      updatedAt: e.updatedAt ? new Date(e.updatedAt) : null,
-    }))
+    return parsed.map((e) => {
+      const textEn = (e.textEn ?? e.text)?.trim() || ''
+      return {
+        ...e,
+        text:      textEn,
+        textEn,
+        date:      new Date(e.date),
+        createdAt: e.createdAt ? new Date(e.createdAt) : null,
+        updatedAt: e.updatedAt ? new Date(e.updatedAt) : null,
+      }
+    })
   } catch {
     return []
   }

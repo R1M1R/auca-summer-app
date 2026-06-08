@@ -31,7 +31,7 @@ interface ComposerProps {
 function EntryComposer({ existing }: ComposerProps) {
   const { t, i18n } = useTranslation()
   const { saveEntry, saving, error } = useDiaryMutations()
-  const [text,    setText]    = useState(existing?.text  ?? '')
+  const [text,    setText]    = useState(existing?.textEn ?? existing?.text ?? '')
   const [mood,    setMood]    = useState<MoodLevel | null>(existing?.mood ?? null)
   const [editing, setEditing] = useState(!existing)
   const [saved,   setSaved]   = useState(false)
@@ -40,7 +40,7 @@ function EntryComposer({ existing }: ComposerProps) {
 
   useEffect(() => {
     if (!editing) {
-      setText(existing?.text  ?? '')
+      setText(existing?.textEn ?? existing?.text ?? '')
       setMood(existing?.mood  ?? null)
     }
   }, [existing, editing])
@@ -77,7 +77,7 @@ function EntryComposer({ existing }: ComposerProps) {
         <MoodBadge mood={existing.mood} />
 
         <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
-          {existing.text}
+          {existing.textEn ?? existing.text}
         </p>
 
         {saved && (
@@ -143,7 +143,7 @@ function EntryComposer({ existing }: ComposerProps) {
         {existing && (
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => { setEditing(false); setText(existing.text); setMood(existing.mood) }}
+            onClick={() => { setEditing(false); setText(existing.textEn ?? existing.text); setMood(existing.mood) }}
             className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-500"
           >
             {t('diary.impressions.cancel')}
@@ -157,7 +157,7 @@ function EntryComposer({ existing }: ComposerProps) {
           className="flex-1 h-10 rounded-xl bg-gradient-to-r from-primary-500 to-violet-600 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-glow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving
-            ? <Loader2 className="w-4 h-4 animate-spin" />
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('diary.impressions.translating')}</>
             : <><Send className="w-4 h-4" /> {t('diary.impressions.saveEntry')}</>
           }
         </motion.button>

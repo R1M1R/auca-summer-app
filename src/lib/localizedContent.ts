@@ -47,9 +47,19 @@ export function localizeEvent(event: AppEvent, role: UserRole, lang: AppLanguage
 }
 
 export function localizeDiaryEntry(entry: DiaryEntry, role: UserRole, lang: AppLanguage): DiaryEntry {
+  const textEn = entry.textEn?.trim() || entry.text?.trim() || ''
+  const textRu = entry.textRu?.trim()
+
+  const displayText =
+    role === 'family'
+      ? textRu || textEn
+      : pickLocalized(textEn, textRu, role, lang)
+
   return {
     ...entry,
-    text: pickLocalized(entry.text, entry.textRu, role, lang),
+    textEn,
+    textRu,
+    text: displayText,
   }
 }
 

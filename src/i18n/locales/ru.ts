@@ -193,6 +193,7 @@ const ru = {
         thoughtsPh:        'Напишите несколько предложений о своём дне…',
         cancel:            'Отмена',
         saveEntry:         'Сохранить запись',
+        translating:       'Перевод…',
         previousEntries:   'Прошлые записи ({{count}})',
         noEntries:         'Записей в дневнике пока нет',
         writeFirst:        'Напишите первое впечатление выше ↑',
@@ -476,6 +477,8 @@ const ru = {
           costVal:       '200–300 сом',
           budgetTitle:   'Справка по тарифам',
           budgetNote:    'Маршрутка — 20 сом (наличные). Автобус — 17 сом (карта/QR). Для поездки дом → AUCA — только 2GIS или Yandex Go.',
+          mapTitle:      'Карта маршрута: дом → AUCA',
+          openIn2gis:    'Открыть маршрут в приложении 2ГИС',
         },
         connectivity: {
           title:    'Связь и интернет',

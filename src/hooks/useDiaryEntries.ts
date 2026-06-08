@@ -9,7 +9,6 @@ import {
 import { db, isConfigured } from '@/lib/firebase'
 import { useDiaryStore } from '@/store/useDiaryStore'
 import { buildDiaryBilingualFields } from '@/lib/dualSave'
-import { useAppStore } from '@/store/useAppStore'
 import {
   loadDemoDiary,
   notifyDemoDiaryUpdate,
@@ -46,13 +45,13 @@ export function useDiaryMutations() {
       setError(null)
       try {
         const trimmed = text.trim()
-        const sourceLang = useAppStore.getState().language
-        const bilingual = await buildDiaryBilingualFields(trimmed, sourceLang)
+        const bilingual = await buildDiaryBilingualFields(trimmed)
         const key = toDateKey(date)
         const payload = {
           date:      Timestamp.fromDate(startOfDay(date)),
-          text:      bilingual.text,
-          text_ru:   bilingual.text_ru,
+          text:      bilingual.textEn,
+          text_en:   bilingual.textEn,
+          text_ru:   bilingual.textRu,
           mood,
           updatedAt: serverTimestamp(),
         }
@@ -63,8 +62,9 @@ export function useDiaryMutations() {
           const entry: DiaryEntry = {
             id: key,
             date: startOfDay(date),
-            text: bilingual.text,
-            textRu: bilingual.text_ru,
+            text: bilingual.textEn,
+            textEn: bilingual.textEn,
+            textRu: bilingual.textRu,
             mood,
             createdAt: idx >= 0 ? stored[idx].createdAt : new Date(),
             updatedAt: new Date(),

@@ -189,6 +189,7 @@ const en = {
         thoughtsPh:        'Write a few sentences about your day…',
         cancel:            'Cancel',
         saveEntry:         'Save Entry',
+        translating:       'Translating…',
         previousEntries:   'Previous entries ({{count}})',
         noEntries:         'No diary entries yet',
         writeFirst:        'Write your first impression above ↑',
@@ -468,6 +469,8 @@ const en = {
           costVal:       '200–300 KGS',
           budgetTitle:   'Fare reference',
           budgetNote:    'Marshrutka — 20 KGS (cash). Bus — 17 KGS (card/QR). For home → AUCA trips use only 2GIS or Yandex Go.',
+          mapTitle:      'Route map: home → AUCA',
+          openIn2gis:    'Open route in 2GIS app',
         },
         connectivity: {
           title:    'Connectivity',
