@@ -1,14 +1,23 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import legacy from '@vitejs/plugin-legacy'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const base = '/'
+
+const LEGACY_TARGETS = ['defaults', 'not IE 11', 'Android >= 5']
 
 export default defineConfig({
   base,
   plugins: [
     react(),
+    legacy({
+      targets: LEGACY_TARGETS,
+      modernPolyfills: true,
+      additionalLegacyPolyfills: ['core-js/proposals/global-this'],
+      renderLegacyChunks: true,
+    }),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
@@ -62,6 +71,10 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    /** CSS autoprefixer baseline for old WebViews (legacy JS handled by plugin-legacy) */
+    cssTarget: 'chrome49',
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
