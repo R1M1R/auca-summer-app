@@ -5,7 +5,7 @@ import { Calendar, Plus, Wifi, WifiOff, Bell, X, Sparkles } from 'lucide-react'
 import { useApp } from '@/contexts/AppContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useAppStore } from '@/store/useAppStore'
-import { useEvents, useEventMutations } from '@/hooks/useEvents'
+import { useSchedule } from '@/hooks/useSchedule'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import { getUserFacingError } from '@/lib/userFacingError'
 import { useToast } from '@/contexts/ToastContext'
@@ -17,46 +17,31 @@ import AddEventModal from '@/components/schedule/AddEventModal'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { SkeletonTimeline } from '@/components/ui/Skeleton'
+import EmptyState from '@/components/ui/EmptyState'
+import Card from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import type { AppEvent } from '@/types'
 import AppHeader from '@/components/layout/AppHeader'
 import AppPage from '@/components/layout/AppPage'
 
-function EmptyDay({ canAdd }: { canAdd: boolean }) {
-  const { t } = useTranslation()
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center gap-4 py-20 text-center px-8"
-    >
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center"
-      >
-        <Calendar className="w-9 h-9 text-slate-300 dark:text-slate-500" strokeWidth={1.5} />
-      </motion.div>
-      <div>
-        <p className="font-semibold text-slate-600 dark:text-slate-300">{t('schedule.noEventsTitle')}</p>
-        <p className="text-sm text-slate-400 mt-1">
-          {canAdd ? t('schedule.noEventsAdd') : t('schedule.noEventsLater')}
-        </p>
-      </div>
-    </motion.div>
-  )
-}
-
 export default function ScheduleDashboard() {
   const { t }      = useTranslation()
-  const { showToast } = useToast()
+  const { toast }  = useToast()
   const { role }   = useApp()
   const { isDark } = useTheme()
   const userId     = useAppStore((s) => s.userId)
   const ensureUserId = useAppStore((s) => s.ensureUserId)
 
-  const { events: rawEvents, loading, error } = useEvents()
+  const {
+    events: rawEvents,
+    loading,
+    error,
+    deleteEvent,
+    toggleComplete,
+    canFamilyMutate,
+    canAddStudentPlan,
+  } = useSchedule()
   const lang = useAppLanguage()
-  const { deleteEvent, toggleComplete, canFamilyMutate, canAddStudentPlan } = useEventMutations()
   const { hasNew, count, markSeen } = useStudentPlanNotifications(rawEvents)
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -87,10 +72,10 @@ export default function ScheduleDashboard() {
       try {
         await toggleComplete(event, !completed)
       } catch (err) {
-        showToast(getUserFacingError(err, t))
+        toast.error(getUserFacingError(err, t))
       }
     },
-    [toggleComplete, showToast, t],
+    [toggleComplete, toast, t],
   )
 
   const handleEditById = useCallback(
@@ -107,9 +92,14 @@ export default function ScheduleDashboard() {
     async (id: string) => {
       const raw = rawEvents.find((r) => r.id === id)
       if (!raw) return
-      await deleteEvent(raw.id, raw)
+      try {
+        await deleteEvent(raw.id, raw)
+        toast.success(t('schedule.eventDeleted'))
+      } catch (err) {
+        toast.error(getUserFacingError(err, t))
+      }
     },
-    [rawEvents, deleteEvent],
+    [rawEvents, deleteEvent, toast, t],
   )
 
   const dateLabel = selectedDate.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
@@ -130,9 +120,9 @@ export default function ScheduleDashboard() {
                 {t('nav.schedule')}
               </p>
               {isToday && (
-                <span className="badge bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] px-2 py-0.5">
+                <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] px-2 py-0.5">
                   {t('schedule.today')}
-                </span>
+                </Badge>
               )}
             </div>
             <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 leading-tight">
@@ -155,7 +145,6 @@ export default function ScheduleDashboard() {
         </div>
       </AppHeader>
 
-      {/* Host: new student plan notification */}
       <AnimatePresence>
         {isFamily && hasNew && (
           <motion.div
@@ -164,8 +153,11 @@ export default function ScheduleDashboard() {
             exit={{ opacity: 0, y: -12, height: 0 }}
             className="mx-4 mt-3"
           >
-            <div className="glass-card px-4 py-3 flex items-start gap-3 border-fuchsia-300/60 dark:border-fuchsia-700/50 bg-gradient-to-r from-fuchsia-50/90 to-violet-50/90 dark:from-fuchsia-950/40 dark:to-violet-950/30">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center text-white shrink-0">
+            <Card
+              className="!p-4 flex items-start gap-3 border-fuchsia-300/60 dark:border-fuchsia-700/50 bg-gradient-to-r from-fuchsia-50/90 to-violet-50/90 dark:from-fuchsia-950/40 dark:to-violet-950/30"
+              padding="none"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center text-white shrink-0 shadow-sm">
                 <Bell className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
@@ -180,12 +172,12 @@ export default function ScheduleDashboard() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={markSeen}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                aria-label={t('dashboard.dismiss')}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                aria-label={t('common.dismiss')}
               >
                 <X className="w-4 h-4" />
               </motion.button>
-            </div>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
@@ -200,15 +192,19 @@ export default function ScheduleDashboard() {
         {loading && <SkeletonTimeline />}
 
         {!loading && error && (
-          <div className="mx-4 mt-4 glass-card px-4 py-3 border border-rose-200 dark:border-rose-900/50">
-            <p className="text-sm text-rose-500">
+          <Card className="mx-0 border-rose-200/70 dark:border-rose-900/50">
+            <p className="text-sm text-rose-600 dark:text-rose-400">
               {t('schedule.eventsLoadError', { error: getUserFacingError(new Error(error), t) })}
             </p>
-          </div>
+          </Card>
         )}
 
         {!loading && !error && dayEvents.length === 0 && (
-          <EmptyDay canAdd={canAdd} />
+          <EmptyState
+            icon={Calendar}
+            title={t('schedule.noEventsTitle')}
+            description={canAdd ? t('schedule.noEventsAdd') : t('schedule.noEventsLater')}
+          />
         )}
 
         {!loading && !error && dayEvents.length > 0 && (
@@ -250,12 +246,14 @@ export default function ScheduleDashboard() {
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.94 }}
             transition={{ duration: 0.2 }}
             onClick={openAdd}
             className={`fab-above-nav fixed right-5 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
               isStudent
-                ? 'bg-gradient-to-br from-fuchsia-500 to-violet-600 focus-visible:ring-fuchsia-400'
-                : 'bg-gradient-to-br from-primary-500 to-violet-600 focus-visible:ring-primary-400'
+                ? 'bg-gradient-to-br from-fuchsia-500 to-violet-600 focus-visible:ring-fuchsia-400 shadow-glow-sm'
+                : 'bg-gradient-to-br from-primary-500 to-violet-600 focus-visible:ring-primary-400 shadow-glow-sm'
             }`}
             aria-label={isStudent ? t('schedule.addMyPlanFab') : t('schedule.addEventFab')}
           >

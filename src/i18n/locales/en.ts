@@ -203,6 +203,7 @@ const en = {
         writeFirst:        'Write your first impression above ↑',
         deleteConfirm:     'Delete this entry?',
         delete:            'Delete',
+        deleted:           'Entry deleted',
       },
     },
     notifications: {
@@ -325,6 +326,14 @@ const en = {
       done:    'Done',
       back:    'Back',
       switchLanguage: 'Switch language',
+      dismiss: 'Dismiss',
+    },
+    errorBoundary: {
+      title:  'Something went wrong',
+      body:   'This screen failed to load. Reload the page or return to the home screen.',
+      reload: 'Reload page',
+      home:   'Go to home',
+      retry:  'Try again without reload',
     },
     schedule: {
       today:           'Today',
@@ -338,6 +347,9 @@ const en = {
       newPlanBody_other: 'Your student added {{count}} new personal plans.',
       addMyPlanFab:    'Add my plan',
       addEventFab:     'Add event',
+      eventSaved:      'Event added to schedule',
+      eventUpdated:    'Event updated',
+      eventDeleted:    'Event removed',
       calendar: {
         events_one:  '{{count}} event',
         events_other: '{{count}} events',

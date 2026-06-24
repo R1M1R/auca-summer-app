@@ -39,7 +39,7 @@ export function useEventReminders(): void {
   const { role } = useApp()
   const events = useEventsStore((s) => s.events)
   const { t } = useTranslation()
-  const { showToast } = useToast()
+  const { toast } = useToast()
   const hintedDenied = useRef(false)
 
   const checkReminders = useCallback(() => {
@@ -57,10 +57,10 @@ export function useEventReminders(): void {
       hintedDenied.current = true
       if (!sessionStorage.getItem(PERM_HINT_KEY)) {
         sessionStorage.setItem(PERM_HINT_KEY, '1')
-        showToast(t('notifications.permissionDeniedHint'))
+        toast.warning(t('notifications.permissionDeniedHint'))
       }
     }
-  }, [role, showToast, t])
+  }, [role, toast, t])
 
   useEffect(() => {
     if (role !== 'student') {

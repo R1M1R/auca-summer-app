@@ -1,14 +1,6 @@
 import { useCallback } from 'react'
-import {
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  collection,
-  serverTimestamp,
-  Timestamp,
-} from 'firebase/firestore'
-import { db, isConfigured } from '@/lib/firebase'
+import { Timestamp } from 'firebase/firestore'
+import { isConfigured } from '@/lib/firebase'
 import { useAppStore } from '@/store/useAppStore'
 import { useEventsStore } from '@/store/useEventsStore'
 import {
@@ -22,14 +14,19 @@ import { completionFieldForStudent } from '@/lib/eventCompletion'
 import { buildEventRussianFields } from '@/lib/dualSave'
 import { sanitizeFirestoreData } from '@/lib/firestoreSanitize'
 import {
-  loadDemoEvents,
-  saveDemoEvents,
-  notifyDemoEventsUpdate,
-  EVENTS_COLLECTION,
-} from '@/lib/eventsData'
+  createEventDocument,
+  updateEventDocument,
+  deleteEventDocument,
+  updateEventCompletion,
+  persistDemoEvents,
+  readDemoEvents,
+} from '@/repositories/eventsRepository'
 import type { AppEvent, NewEventPayload, UpdateEventPayload } from '@/types'
 import { ADMIN_CREATOR } from '@/types'
 
+/**
+ * Subscribes to the global events store (real-time sync lives in useEventsStore).
+ */
 export function useEvents() {
   const events  = useEventsStore((s) => s.events)
   const loading = useEventsStore((s) => s.loading)
@@ -37,6 +34,10 @@ export function useEvents() {
   return { events, loading, error }
 }
 
+/**
+ * Schedule mutations with role-based permission checks.
+ * Firestore field names and collection are unchanged — see eventsRepository.
+ */
 export function useEventMutations() {
   const role         = useAppStore((s) => s.role)
   const userId       = useAppStore((s) => s.userId)
@@ -109,7 +110,7 @@ export function useEventMutations() {
         })
 
         if (!isConfigured) {
-          const list = loadDemoEvents()
+          const list = readDemoEvents()
           const now  = new Date()
           list.push({
             id:            `demo-${Date.now()}`,
@@ -125,22 +126,17 @@ export function useEventMutations() {
             createdAt:     now,
             updatedAt:     now,
           })
-          saveDemoEvents(list)
-          notifyDemoEventsUpdate()
+          persistDemoEvents(list)
           return
         }
 
-        await addDoc(collection(db, EVENTS_COLLECTION), {
-          ...docData,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
+        await createEventDocument(docData)
         return
       }
 
       if (!canFamilyMutate) throw new Error('Only host family can add program events')
       if (!isConfigured) {
-        const list = loadDemoEvents()
+        const list = readDemoEvents()
         const now  = new Date()
         list.push({
           id:          `demo-${Date.now()}`,
@@ -151,13 +147,11 @@ export function useEventMutations() {
           createdAt:   now,
           updatedAt:   now,
         })
-        saveDemoEvents(list)
-        notifyDemoEventsUpdate()
+        persistDemoEvents(list)
         return
       }
 
-      await addDoc(
-        collection(db, EVENTS_COLLECTION),
+      await createEventDocument(
         sanitizeFirestoreData({
           title:       payload.title,
           description: payload.description ?? '',
@@ -168,8 +162,6 @@ export function useEventMutations() {
           createdBy:   ADMIN_CREATOR,
           isEditable:  false,
           completed:   false,
-          createdAt:   serverTimestamp(),
-          updatedAt:   serverTimestamp(),
         }),
       )
     },
@@ -181,7 +173,7 @@ export function useEventMutations() {
       if (existing) assertCanEdit(existing)
 
       if (!isConfigured) {
-        const list = loadDemoEvents()
+        const list = readDemoEvents()
         const idx  = list.findIndex((e) => e.id === id)
         if (idx === -1) throw new Error('Event not found')
         if (!canFamilyMutate) assertCanEdit(list[idx])
@@ -202,8 +194,7 @@ export function useEventMutations() {
           merged.locationRu = ruFields.location_ru
         }
         list[idx] = merged
-        saveDemoEvents(list)
-        notifyDemoEventsUpdate()
+        persistDemoEvents(list)
         return
       }
 
@@ -211,7 +202,7 @@ export function useEventMutations() {
         throw new Error('Event context required for student update')
       }
 
-      const data: Record<string, unknown> = { updatedAt: serverTimestamp() }
+      const data: Record<string, unknown> = {}
       if (payload.title !== undefined) data.title = payload.title
       if (payload.description !== undefined) data.description = payload.description
       if (payload.date) data.date = Timestamp.fromDate(payload.date)
@@ -229,7 +220,7 @@ export function useEventMutations() {
         Object.assign(data, ruFields)
       }
 
-      await updateDoc(doc(db, EVENTS_COLLECTION, id), sanitizeFirestoreData(data))
+      await updateEventDocument(id, data)
     },
     [canFamilyMutate, role, assertCanEdit],
   )
@@ -239,16 +230,15 @@ export function useEventMutations() {
       if (existing) assertCanDelete(existing)
 
       if (!isConfigured) {
-        const list = loadDemoEvents()
+        const list = readDemoEvents()
         const ev   = list.find((e) => e.id === id)
         if (!ev) return
         if (!canFamilyMutate) assertCanDelete(ev)
-        saveDemoEvents(list.filter((e) => e.id !== id))
-        notifyDemoEventsUpdate()
+        persistDemoEvents(list.filter((e) => e.id !== id))
         return
       }
 
-      await deleteDoc(doc(db, EVENTS_COLLECTION, id))
+      await deleteEventDocument(id)
     },
     [canFamilyMutate, assertCanDelete],
   )
@@ -266,7 +256,7 @@ export function useEventMutations() {
       }
 
       if (!isConfigured) {
-        const list = loadDemoEvents()
+        const list = readDemoEvents()
         const idx  = list.findIndex((e) => e.id === event.id)
         if (idx === -1) return
         list[idx] = {
@@ -274,15 +264,11 @@ export function useEventMutations() {
           [field]: completed,
           updatedAt: new Date(),
         }
-        saveDemoEvents(list)
-        notifyDemoEventsUpdate()
+        persistDemoEvents(list)
         return
       }
 
-      await updateDoc(doc(db, EVENTS_COLLECTION, event.id), {
-        [field]:   completed,
-        updatedAt: serverTimestamp(),
-      })
+      await updateEventCompletion(event.id, field, completed)
     },
     [role, userId, ensureUserId],
   )

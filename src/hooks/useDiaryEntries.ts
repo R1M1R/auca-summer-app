@@ -1,22 +1,16 @@
 import { useState, useCallback } from 'react'
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-  Timestamp,
-} from 'firebase/firestore'
-import { db, isConfigured } from '@/lib/firebase'
+import { isConfigured } from '@/lib/firebase'
 import { useDiaryStore } from '@/store/useDiaryStore'
 import { buildDiaryBilingualFields } from '@/lib/dualSave'
 import {
-  loadDemoDiary,
-  notifyDemoDiaryUpdate,
-  DIARY_COLLECTION,
-} from '@/lib/diaryData'
-import { DEMO_DIARY_KEY } from '@/lib/demoStorage'
+  upsertDiaryEntry,
+  deleteDiaryEntry,
+  persistDemoDiary,
+  readDemoDiary,
+} from '@/repositories/diaryRepository'
 import type { DiaryEntry, MoodLevel } from '@/types'
 
+/** Formats a date as YYYY-MM-DD (Firestore document key). */
 export function toDateKey(d: Date): string {
   const y  = d.getFullYear()
   const mo = String(d.getMonth() + 1).padStart(2, '0')
@@ -28,6 +22,7 @@ function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
 }
 
+/** Read-only diary entries from the global store. */
 export function useDiaryEntries() {
   const entries = useDiaryStore((s) => s.entries)
   const loading = useDiaryStore((s) => s.loading)
@@ -35,6 +30,7 @@ export function useDiaryEntries() {
   return { entries, loading, error }
 }
 
+/** Diary write operations with bilingual auto-translation. */
 export function useDiaryMutations() {
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState<string | null>(null)
@@ -51,21 +47,14 @@ export function useDiaryMutations() {
         const trimmed = text.trim()
         const bilingual = await buildDiaryBilingualFields(trimmed)
         const key = toDateKey(date)
-        const payload = {
-          date:      Timestamp.fromDate(startOfDay(date)),
-          text:      bilingual.textEn,
-          text_en:   bilingual.textEn,
-          text_ru:   bilingual.textRu,
-          mood,
-          updatedAt: serverTimestamp(),
-        }
+        const dayStart = startOfDay(date)
 
         if (!isConfigured) {
-          const stored = loadDemoDiary()
+          const stored = readDemoDiary()
           const idx = stored.findIndex((e) => e.id === key)
           const entry: DiaryEntry = {
             id: key,
-            date: startOfDay(date),
+            date: dayStart,
             text: bilingual.textEn,
             textEn: bilingual.textEn,
             textRu: bilingual.textRu,
@@ -75,18 +64,17 @@ export function useDiaryMutations() {
           }
           if (idx >= 0) stored[idx] = entry
           else stored.unshift(entry)
-          localStorage.setItem(DEMO_DIARY_KEY, JSON.stringify(stored))
-          notifyDemoDiaryUpdate()
+          persistDemoDiary(stored)
           return { translationOk: bilingual.translationOk }
         }
 
-        const ref = doc(db, DIARY_COLLECTION, key)
-        const snap = await getDoc(ref)
-
-        await setDoc(ref, {
-          ...payload,
-          ...(!snap.exists() && { createdAt: serverTimestamp() }),
-        }, { merge: true })
+        await upsertDiaryEntry({
+          dateKey: key,
+          date: dayStart,
+          textEn: bilingual.textEn,
+          textRu: bilingual.textRu,
+          mood,
+        })
         return { translationOk: bilingual.translationOk }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Save failed'
@@ -101,13 +89,10 @@ export function useDiaryMutations() {
 
   const deleteEntry = useCallback(async (id: string): Promise<void> => {
     if (!isConfigured) {
-      const stored = loadDemoDiary().filter((e) => e.id !== id)
-      localStorage.setItem(DEMO_DIARY_KEY, JSON.stringify(stored))
-      notifyDemoDiaryUpdate()
+      persistDemoDiary(readDemoDiary().filter((e) => e.id !== id))
       return
     }
-    const { deleteDoc } = await import('firebase/firestore')
-    await deleteDoc(doc(db, DIARY_COLLECTION, id))
+    await deleteDiaryEntry(id)
   }, [])
 
   return { saveEntry, deleteEntry, saving, error }

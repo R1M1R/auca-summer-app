@@ -74,6 +74,19 @@ export default defineConfig({
   build: {
     /** CSS autoprefixer baseline for old WebViews (legacy JS handled by plugin-legacy) */
     cssTarget: 'chrome49',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('firebase')) return 'vendor-firebase'
+          if (id.includes('framer-motion')) return 'vendor-motion'
+          if (id.includes('react-dom') || id.includes('react-router') || id.includes('/react/')) {
+            return 'vendor-react'
+          }
+          if (id.includes('i18next')) return 'vendor-i18n'
+        },
+      },
+    },
   },
   resolve: {
     alias: {

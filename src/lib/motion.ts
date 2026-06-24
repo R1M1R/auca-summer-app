@@ -19,3 +19,11 @@ export const fadeUpLight = {
     transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
   },
 } as const
+
+/** Stagger children in lists — use on motion container */
+export const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.05, delayChildren: 0.04 } },
+} as const
+
+/** Tap feedback for icon buttons */
+export const tapScale = { whileTap: { scale: 0.92 } } as const

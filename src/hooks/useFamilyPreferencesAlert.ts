@@ -9,7 +9,7 @@ import { showBrowserNotification } from '@/lib/browserNotifications'
 export function useFamilyPreferencesAlert(): void {
   const { role } = useApp()
   const { t } = useTranslation()
-  const { showToast } = useToast()
+  const { toast } = useToast()
   const { lastSaved } = usePreferences()
   const prevSavedRef = useRef<Date | null>(null)
   const ignoreRef    = useRef(true)
@@ -38,9 +38,9 @@ export function useFamilyPreferencesAlert(): void {
       const body  = t('notifications.studentActivity.prefsUpdated')
 
       void showBrowserNotification(title, { body, tag: 'student-prefs', data: { type: 'student_prefs' } })
-      showToast(body)
+      toast.info(body)
     }
 
     prevSavedRef.current = lastSaved
-  }, [lastSaved, role, showToast, t])
+  }, [lastSaved, role, toast, t])
 }

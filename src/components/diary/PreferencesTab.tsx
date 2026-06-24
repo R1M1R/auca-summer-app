@@ -3,11 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   Leaf, Utensils, Coffee, ThumbsDown, MessageSquare,
-  FileText, Save, CheckCircle2, Lock, Loader2,
+  FileText, Lock,
 } from 'lucide-react'
 import { usePreferences } from '@/hooks/usePreferences'
+import { useToast } from '@/contexts/ToastContext'
 import ChipInput from '@/components/diary/ChipInput'
 import { SkeletonCard } from '@/components/ui/Skeleton'
+import Card from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
+import { getUserFacingError } from '@/lib/userFacingError'
 import { localizePreferences } from '@/lib/localizedContent'
 import { useAppLanguage } from '@/hooks/useAppLanguage'
 import type { StudentPreferences, UserRole } from '@/types'
@@ -22,12 +26,12 @@ interface Props { role: UserRole }
 
 export default function PreferencesTab({ role }: Props) {
   const { t, i18n } = useTranslation()
+  const { toast } = useToast()
   const isFamily = role === 'family'
   const { preferences: remote, loading, saving, lastSaved, savePreferences, error: loadError } = usePreferences()
 
   const [draft,   setDraft]   = useState(remote)
-  const [dirty,   setDirty]   = useState(false)
-  const [saved,   setSaved]   = useState(false)
+  const [dirty, setDirty] = useState(false)
   const [saveErr, setSaveErr] = useState<string | null>(null)
 
   const lang = useAppLanguage()
@@ -75,7 +79,7 @@ export default function PreferencesTab({ role }: Props) {
   const update = <K extends keyof StudentPreferences>(key: K, value: StudentPreferences[K]) => {
     setDraft((d) => ({ ...d, [key]: value }))
     setDirty(true)
-    setSaved(false)
+    setSaveErr(null)
   }
 
   const handleSave = async () => {
@@ -83,10 +87,11 @@ export default function PreferencesTab({ role }: Props) {
     try {
       await savePreferences(draft)
       setDirty(false)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      toast.success(t('diary.prefs.saved'))
     } catch (e) {
-      setSaveErr(e instanceof Error ? e.message : t('diary.prefs.saveFailed'))
+      const msg = e instanceof Error ? e.message : t('diary.prefs.saveFailed')
+      setSaveErr(msg)
+      toast.error(getUserFacingError(e, t))
     }
   }
 
@@ -102,9 +107,9 @@ export default function PreferencesTab({ role }: Props) {
 
   if (loadError) {
     return (
-      <div className="glass-card card-pad border border-rose-200 dark:border-rose-900/50">
-        <p className="text-sm text-rose-500">{t('diary.prefs.loadError', { error: loadError })}</p>
-      </div>
+      <Card className="border-rose-200/70 dark:border-rose-900/50">
+        <p className="text-sm text-rose-600 dark:text-rose-400">{t('diary.prefs.loadError', { error: loadError })}</p>
+      </Card>
     )
   }
 
@@ -130,7 +135,8 @@ export default function PreferencesTab({ role }: Props) {
       {readOnlyBanner}
 
       {CHIP_SECTIONS.map(({ key, label, placeholder, Icon, gradient, chipColor }) => (
-        <motion.div key={key} variants={fadeUp} className="glass-card card-pad space-y-3">
+        <motion.div key={key} variants={fadeUp}>
+          <Card className="space-y-3">
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-sm shrink-0`}>
               <Icon className="w-4 h-4" strokeWidth={1.8} />
@@ -145,10 +151,12 @@ export default function PreferencesTab({ role }: Props) {
             readOnly={isFamily}
             chipColor={chipColor}
           />
+          </Card>
         </motion.div>
       ))}
 
-      <motion.div variants={fadeUp} className="glass-card card-pad space-y-3">
+      <motion.div variants={fadeUp}>
+        <Card className="space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-sm">
             <MessageSquare className="w-4 h-4" strokeWidth={1.8} />
@@ -170,9 +178,11 @@ export default function PreferencesTab({ role }: Props) {
             className="input-field resize-none text-sm"
           />
         )}
+        </Card>
       </motion.div>
 
-      <motion.div variants={fadeUp} className="glass-card card-pad space-y-3">
+      <motion.div variants={fadeUp}>
+        <Card className="space-y-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center text-white shadow-sm">
             <FileText className="w-4 h-4" strokeWidth={1.8} />
@@ -194,6 +204,7 @@ export default function PreferencesTab({ role }: Props) {
             className="input-field resize-none text-sm"
           />
         )}
+        </Card>
       </motion.div>
 
       {!isFamily && (
@@ -211,30 +222,17 @@ export default function PreferencesTab({ role }: Props) {
             )}
           </AnimatePresence>
 
-          <motion.button
+          <Button
+            type="button"
+            variant="primary"
+            fullWidth
+            className="h-12"
+            isLoading={saving}
+            disabled={!dirty || saving}
             onClick={handleSave}
-            disabled={saving || (!dirty && !saved)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className={`w-full flex items-center justify-center gap-2 h-12 rounded-2xl font-semibold text-sm transition-all ${
-              saved
-                ? 'bg-emerald-500 text-white'
-                : dirty
-                ? 'btn-primary'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-            }`}
           >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{t('diary.prefs.translating')}</span>
-              </>
-            ) : saved ? (
-              <><CheckCircle2 className="w-4 h-4" /> {t('diary.prefs.saved')}</>
-            ) : (
-              <><Save className="w-4 h-4" /> {t('diary.prefs.save')}</>
-            )}
-          </motion.button>
+            {saving ? t('diary.prefs.translating') : t('diary.prefs.save')}
+          </Button>
 
           {lastSaved && !dirty && (
             <p className="text-center text-[11px] text-slate-400">

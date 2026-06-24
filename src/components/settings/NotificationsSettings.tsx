@@ -27,7 +27,7 @@ function StatusBadge({ label, tone }: { label: string; tone: 'granted' | 'denied
 export default function NotificationsSettings() {
   const { t } = useTranslation()
   const { role } = useApp()
-  const { showToast } = useToast()
+  const { toast } = useToast()
   const {
     permission,
     supported,
@@ -44,9 +44,9 @@ export default function NotificationsSettings() {
   const handleEnable = async () => {
     const result = await request()
     if (result === 'granted') {
-      showToast(t('notifications.settings.enabledToast'))
+      toast.success(t('notifications.settings.enabledToast'))
     } else if (result === 'denied') {
-      showToast(t('notifications.settings.deniedToast'))
+      toast.warning(t('notifications.settings.deniedToast'))
     }
   }
 
@@ -58,9 +58,9 @@ export default function NotificationsSettings() {
         t('notifications.settings.testBody'),
       )
       if (ok) {
-        showToast(t('notifications.settings.testSent'))
+        toast.success(t('notifications.settings.testSent'))
       } else {
-        showToast(t('notifications.settings.testFailed'))
+        toast.error(t('notifications.settings.testFailed'))
       }
     } finally {
       setTesting(false)

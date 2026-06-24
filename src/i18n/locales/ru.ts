@@ -207,6 +207,7 @@ const ru = {
         writeFirst:        'Напишите первое впечатление выше ↑',
         deleteConfirm:     'Удалить эту запись?',
         delete:            'Удалить',
+        deleted:           'Запись удалена',
       },
     },
     notifications: {
@@ -329,6 +330,14 @@ const ru = {
       done:    'Готово',
       back:    'Назад',
       switchLanguage: 'Сменить язык',
+      dismiss: 'Закрыть',
+    },
+    errorBoundary: {
+      title:  'Что-то пошло не так',
+      body:   'Экран не загрузился. Обновите страницу или вернитесь на главную.',
+      reload: 'Обновить страницу',
+      home:   'На главную',
+      retry:  'Попробовать снова',
     },
     schedule: {
       today:           'Сегодня',
@@ -344,6 +353,9 @@ const ru = {
       newPlanBody_other: 'Студент добавил {{count}} новых личных записей.',
       addMyPlanFab:    'Добавить мой план',
       addEventFab:     'Добавить событие',
+      eventSaved:      'Событие добавлено в расписание',
+      eventUpdated:    'Событие обновлено',
+      eventDeleted:    'Событие удалено',
       calendar: {
         events_one:  '{{count}} событие',
         events_few:  '{{count}} события',

@@ -1,0 +1,1 @@
+import{j as e}from"./vendor-react-Db25wLyb.js";function i({children:a,className:s="",interactive:r=!1,padding:t="default"}){return e.jsx("div",{className:["glass-card",t==="default"?"card-pad":"",r?"glass-card-interactive":"",s].join(" "),children:a})}export{i as C};

@@ -33,7 +33,7 @@ function activityMessage(
 export function useFamilyStudentActivityAlerts(): void {
   const { role } = useApp()
   const { t, i18n } = useTranslation()
-  const { showToast } = useToast()
+  const { toast } = useToast()
   const ignoreRef = useRef(true)
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function useFamilyStudentActivityAlerts(): void {
           tag:  `student-activity-${activity.type}-${activity.event.id}`,
           data: { eventId: activity.event.id, type: 'student_activity', activityType: activity.type },
         })
-        showToast(body)
+        toast.info(body)
       }
     })
 
@@ -65,5 +65,5 @@ export function useFamilyStudentActivityAlerts(): void {
       window.clearTimeout(primeTimer)
       unsub()
     }
-  }, [role, showToast, t, i18n.language])
+  }, [role, toast, t, i18n.language])
 }

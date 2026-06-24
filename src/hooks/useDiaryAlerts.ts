@@ -13,7 +13,7 @@ function entryCreatedAt(entry: DiaryEntry): Date {
 export function useDiaryAlerts(): void {
   const { role } = useApp()
   const { t } = useTranslation()
-  const { showToast } = useToast()
+  const { toast } = useToast()
   const sessionStartedAt = useRef(0)
   const ignoreAdds       = useRef(true)
 
@@ -44,7 +44,7 @@ export function useDiaryAlerts(): void {
           tag:  `diary-${entry.id}`,
           data: { entryId: entry.id, type: 'diary_entry' },
         })
-        showToast(body)
+        toast.info(body)
       }
     })
 
@@ -52,5 +52,5 @@ export function useDiaryAlerts(): void {
       window.clearTimeout(primeTimer)
       unsub()
     }
-  }, [role, showToast, t])
+  }, [role, toast, t])
 }
