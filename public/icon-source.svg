@@ -1,19 +1,54 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TimeFlow">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4f46e5"/>
-      <stop offset="55%" style="stop-color:#7c3aed"/>
-      <stop offset="100%" style="stop-color:#a855f7"/>
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="38%" stop-color="#6366f1"/>
+      <stop offset="72%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#9333ea"/>
     </linearGradient>
-    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.22"/>
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
+    <linearGradient id="sun" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="85%" r="55%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.18"/>
+    </radialGradient>
+    <filter id="sun-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  <rect width="512" height="512" fill="url(#bg)"/>
-  <rect width="512" height="256" fill="url(#shine)"/>
-  <path fill="#ffffff" opacity="0.95" d="M148 168h216v52H292v176h-72V220H148z"/>
-  <path fill="#ffffff" opacity="0.35" d="M96 340 L176 260 L248 300 L336 200 L416 280 L416 380 L96 380 Z"/>
-  <circle cx="400" cy="112" r="28" fill="#fbbf24" opacity="0.9"/>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="292" rx="112" fill="url(#shine)"/>
+  <rect width="512" height="512" rx="112" fill="url(#vignette)"/>
+
+  <rect x="22" y="22" width="468" height="468" rx="98" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="1.5"/>
+
+  <path fill="#ffffff" fill-opacity="0.11" d="M0 372 L118 268 L204 324 L296 236 L388 296 L512 264 L512 512 L0 512Z"/>
+  <path fill="#ffffff" fill-opacity="0.07" d="M0 412 L96 332 L188 372 L272 312 L368 356 L512 328 L512 512 L0 512Z"/>
+
+  <circle cx="256" cy="252" r="118" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="3"/>
+  <circle cx="256" cy="252" r="104" fill="none" stroke="#ffffff" stroke-opacity="0.95" stroke-width="13"/>
+
+  <g stroke="#ffffff" stroke-linecap="round">
+    <line x1="256" y1="252" x2="256" y2="176" stroke-width="14"/>
+    <line x1="256" y1="252" x2="316" y2="278" stroke-width="11" stroke-opacity="0.92"/>
+  </g>
+  <circle cx="256" cy="252" r="13" fill="#ffffff"/>
+
+  <path fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-opacity="0.5"
+    d="M156 400 Q256 362 356 400"/>
+
+  <circle cx="396" cy="112" r="36" fill="url(#sun)" filter="url(#sun-glow)"/>
+  <circle cx="396" cy="112" r="20" fill="#ffffff" fill-opacity="0.35"/>
 </svg>
